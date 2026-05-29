@@ -1,8 +1,9 @@
 package dev.kout2.census.command;
 
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import dev.kout2.census.CensusMod;
+import dev.kout2.census.memory.MemoryEntry;
+import dev.kout2.census.memory.MemoryStream;
 import dev.kout2.census.persona.BigFive;
 import dev.kout2.census.persona.DerivedTrait;
 import dev.kout2.census.persona.Persona;
@@ -12,6 +13,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.npc.villager.Villager;
@@ -22,6 +24,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.StringJoiner;
 
 /**
@@ -45,40 +48,62 @@ public final class CensusCommand {
     private static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("census")
                 .then(Commands.literal("who")
-                        .executes(ctx -> whoNearest(ctx.getSource()))
+                        .executes(ctx -> who(ctx.getSource(), nearest(ctx.getSource())))
                         .then(Commands.argument("target", EntityArgument.entity())
                                 .executes(ctx -> who(ctx.getSource(),
+                                        EntityArgument.getEntity(ctx, "target")))))
+                .then(Commands.literal("memory")
+                        .executes(ctx -> memory(ctx.getSource(), nearest(ctx.getSource())))
+                        .then(Commands.argument("target", EntityArgument.entity())
+                                .executes(ctx -> memory(ctx.getSource(),
                                         EntityArgument.getEntity(ctx, "target"))))));
     }
 
-    private static int whoNearest(CommandSourceStack source) {
+    /** Nearest censused villager to the source, or {@code null} if none in range. */
+    private static Entity nearest(CommandSourceStack source) {
         ServerLevel level = source.getLevel();
         Vec3 origin = source.getPosition();
         AABB box = AABB.ofSize(origin, SEARCH_RADIUS * 2, SEARCH_RADIUS * 2, SEARCH_RADIUS * 2);
-
-        Villager nearest = level.getEntitiesOfClass(Villager.class, box,
+        return level.getEntitiesOfClass(Villager.class, box,
                         v -> v.hasData(ModAttachments.PERSONA)).stream()
                 .min(Comparator.comparingDouble(v -> v.distanceToSqr(origin)))
                 .orElse(null);
-
-        if (nearest == null) {
-            source.sendFailure(Component.literal(
-                    "No censused villager within " + (int) SEARCH_RADIUS + " blocks."));
-            return 0;
-        }
-        return who(source, nearest);
     }
 
     private static int who(CommandSourceStack source, Entity entity) {
-        if (!entity.hasData(ModAttachments.PERSONA)) {
-            source.sendFailure(Component.literal(
-                    entity.getName().getString() + " has no persona."));
+        if (!validate(source, entity)) {
             return 0;
         }
         Persona p = entity.getData(ModAttachments.PERSONA);
         long now = source.getLevel().getGameTime();
         source.sendSuccess(() -> describe(p, now), false);
         return 1;
+    }
+
+    private static int memory(CommandSourceStack source, Entity entity) {
+        if (!validate(source, entity)) {
+            return 0;
+        }
+        Persona p = entity.getData(ModAttachments.PERSONA);
+        MemoryStream stream = entity.getData(ModAttachments.MEMORY);
+        long now = source.getLevel().getGameTime();
+        source.sendSuccess(() -> describeMemory(p, stream, now), false);
+        return 1;
+    }
+
+    /** Shared null/persona guard for both subcommands. */
+    private static boolean validate(CommandSourceStack source, Entity entity) {
+        if (entity == null) {
+            source.sendFailure(Component.literal(
+                    "No censused villager within " + (int) SEARCH_RADIUS + " blocks."));
+            return false;
+        }
+        if (!entity.hasData(ModAttachments.PERSONA)) {
+            source.sendFailure(Component.literal(
+                    entity.getName().getString() + " has no persona."));
+            return false;
+        }
+        return true;
     }
 
     private static Component describe(Persona p, long now) {
@@ -115,5 +140,36 @@ public final class CensusCommand {
             joiner.add(trait.name().toLowerCase());
         }
         return joiner.length() == 0 ? "(balanced)" : joiner.toString();
+    }
+
+    private static final int MEMORY_LINES = 15;
+
+    private static Component describeMemory(Persona p, MemoryStream stream, long now) {
+        MutableComponent body = Component.literal("")
+                .append(line(ChatFormatting.GOLD, "── " + p.fullName() + " — memories ("
+                        + stream.size() + ") ──"));
+        if (stream.isEmpty()) {
+            body.append(line(ChatFormatting.GRAY, "  (nothing memorable yet)"));
+            return body;
+        }
+        for (MemoryEntry e : stream.recent(MEMORY_LINES)) {
+            body.append(line(valenceColor(e.valence()), "  " + formatEntry(e, now)));
+        }
+        return body;
+    }
+
+    private static String formatEntry(MemoryEntry e, long now) {
+        long agoTicks = Math.max(0L, now - e.tick());
+        String ago = agoTicks < 1200 ? (agoTicks / 20) + "s ago"
+                : agoTicks < 24000 ? (agoTicks / 1200) + "m ago"
+                : (agoTicks / 24000) + "d ago";
+        return String.format("%-16s imp %.1f  val %+.1f  (%s)",
+                e.type().getSerializedName(), e.importance(), e.valence(), ago);
+    }
+
+    private static ChatFormatting valenceColor(float valence) {
+        if (valence > 0.1f) return ChatFormatting.GREEN;
+        if (valence < -0.1f) return ChatFormatting.RED;
+        return ChatFormatting.GRAY;
     }
 }

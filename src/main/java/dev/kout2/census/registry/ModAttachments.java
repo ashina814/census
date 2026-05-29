@@ -1,6 +1,7 @@
 package dev.kout2.census.registry;
 
 import dev.kout2.census.CensusMod;
+import dev.kout2.census.memory.MemoryStream;
 import dev.kout2.census.persona.Persona;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.attachment.AttachmentType;
@@ -29,6 +30,16 @@ public final class ModAttachments {
                     AttachmentType.<Persona>builder(() -> Persona.UNKNOWN)
                             .serialize(Persona.MAP_CODEC)
                             .sync(Persona.STREAM_CODEC)
+                            .build());
+
+    /**
+     * MemoryStream: persisted but NOT synced (server-only). Behaviour and
+     * narrative decisions read it server-side; the client never needs it.
+     */
+    public static final Supplier<AttachmentType<MemoryStream>> MEMORY =
+            ATTACHMENT_TYPES.register("memory", () ->
+                    AttachmentType.<MemoryStream>builder(MemoryStream::new)
+                            .serialize(MemoryStream.MAP_CODEC)
                             .build());
 
     private ModAttachments() {}
