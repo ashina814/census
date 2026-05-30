@@ -4,69 +4,107 @@ import dev.kout2.census.Census;
 import dev.kout2.census.CensusMod;
 import dev.kout2.census.reputation.Gossip;
 import dev.kout2.census.social.SocialBonds;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.npc.villager.Villager;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
-import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
- * The social heartbeat: on a throttled server tick, villagers meet their
- * neighbours to gossip and grow bonds (and pair off when fond enough), and
- * established couples occasionally bear a child.
+ * The social heartbeat — gossip, bond growth, courtship and couple-driven
+ * birth — driven by a spread tick scheduler rather than a once-every-N-ticks
+ * spike.
  *
- * A per-round {@link #MAX_PAIRS} budget plus the heavy gating inside
- * {@link SocialBonds#tryReproduce} keep the cost flat regardless of village
- * size.
+ * Each level keeps a cached roster of its censused villagers, re-scanned only
+ * every {@link #ROSTER_REFRESH} ticks (so the O(n) entity query runs no more
+ * often than before). A rolling cursor then processes just a thin slice of that
+ * roster every tick, so the whole village is visited about once per refresh
+ * window with the work amortised across all ticks instead of stalling one.
+ * This keeps per-tick time flat as villages grow into the hundreds.
  */
 @EventBusSubscriber(modid = CensusMod.MODID)
 public final class SocialEventHandlers {
-    private static final int INTERVAL = 200;        // ~10s between social rounds
+    private static final int ROSTER_REFRESH = 200;     // re-scan villagers ~every 10s
+    private static final int SPREAD_TICKS = 200;        // visit the whole roster over this window
+    private static final int MAX_MEETINGS_PER_TICK = 2; // server-wide meeting budget per tick
     private static final double MEET_RADIUS = 8.0;
-    private static final int MAX_PAIRS = 50;        // meetings per round, server-wide
     private static final float MEET_CHANCE = 0.25f;
 
+    private static final Map<ResourceKey<Level>, Roster> ROSTERS = new HashMap<>();
+
     private SocialEventHandlers() {}
+
+    /** Per-level cached villager list with a rolling cursor. */
+    private static final class Roster {
+        List<? extends Villager> villagers = List.of();
+        int cursor = 0;
+        long refreshedAt = Long.MIN_VALUE;
+    }
 
     @SubscribeEvent
     public static void onServerTick(ServerTickEvent.Post event) {
         MinecraftServer server = event.getServer();
-        if (server.getTickCount() % INTERVAL != 0) {
-            return;
-        }
         long now = server.getTickCount();
-        int budget = MAX_PAIRS;
-        for (ServerLevel level : server.getAllLevels()) {
-            List<? extends Villager> villagers =
-                    level.getEntities(EntityType.VILLAGER, Census::isCensused);
-            for (Villager villager : villagers) {
-                // Couples may bear a child (heavily gated inside).
-                SocialBonds.tryReproduce(level, villager, now);
+        int meetingBudget = MAX_MEETINGS_PER_TICK;
 
-                if (budget <= 0 || villager.getRandom().nextFloat() > MEET_CHANCE) {
-                    continue;
+        for (ServerLevel level : server.getAllLevels()) {
+            Roster roster = ROSTERS.computeIfAbsent(level.dimension(), k -> new Roster());
+            if (now - roster.refreshedAt >= ROSTER_REFRESH) {
+                roster.villagers = level.getEntities(EntityType.VILLAGER, Census::isCensused);
+                roster.refreshedAt = now;
+            }
+            int size = roster.villagers.size();
+            if (size == 0) {
+                continue;
+            }
+            int perTick = Math.max(1, (size + SPREAD_TICKS - 1) / SPREAD_TICKS);
+            for (int i = 0; i < perTick; i++) {
+                Villager villager = roster.villagers.get(roster.cursor % size);
+                roster.cursor++;
+                if (!villager.isAlive() || !Census.isCensused(villager)) {
+                    continue; // died/unloaded since the roster was taken
                 }
-                Villager neighbour = nearestNeighbour(level, villager);
-                if (neighbour != null) {
-                    Gossip.exchange(villager, neighbour, now);
-                    SocialBonds.meet(villager, neighbour);
-                    budget--;
+                SocialBonds.tryReproduce(level, villager, now);
+                if (meetingBudget > 0 && villager.getRandom().nextFloat() < MEET_CHANCE) {
+                    Villager neighbour = nearestNeighbour(level, villager);
+                    if (neighbour != null) {
+                        Gossip.exchange(villager, neighbour, now);
+                        SocialBonds.meet(villager, neighbour);
+                        meetingBudget--;
+                    }
                 }
             }
         }
     }
 
+    /** Forget cached rosters when the server stops (avoids holding stale entities). */
+    @SubscribeEvent
+    public static void onServerStopping(ServerStoppingEvent event) {
+        ROSTERS.clear();
+    }
+
     private static Villager nearestNeighbour(ServerLevel level, Villager self) {
         AABB box = self.getBoundingBox().inflate(MEET_RADIUS);
-        return level.getEntitiesOfClass(Villager.class, box,
-                        v -> v != self && Census.isCensused(v)).stream()
-                .min(Comparator.comparingDouble(v -> v.distanceToSqr(self)))
-                .orElse(null);
+        Villager nearest = null;
+        double best = Double.MAX_VALUE;
+        for (Villager v : level.getEntitiesOfClass(Villager.class, box,
+                v -> v != self && Census.isCensused(v))) {
+            double d = v.distanceToSqr(self);
+            if (d < best) {
+                best = d;
+                nearest = v;
+            }
+        }
+        return nearest;
     }
 }
