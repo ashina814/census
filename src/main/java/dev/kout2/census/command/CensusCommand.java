@@ -8,6 +8,7 @@ import dev.kout2.census.emotion.PADMood;
 import dev.kout2.census.lineage.Lineage;
 import dev.kout2.census.memory.MemoryEntry;
 import dev.kout2.census.memory.MemoryStream;
+import dev.kout2.census.reputation.ReputationBook;
 import dev.kout2.census.persona.BigFive;
 import dev.kout2.census.persona.DerivedTrait;
 import dev.kout2.census.persona.Persona;
@@ -29,7 +30,9 @@ import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
+import java.util.UUID;
 
 /**
  * {@code /census who [target]} — inspect a mob's persona.
@@ -70,6 +73,11 @@ public final class CensusCommand {
                         .executes(ctx -> family(ctx.getSource(), nearest(ctx.getSource())))
                         .then(Commands.argument("target", EntityArgument.entity())
                                 .executes(ctx -> family(ctx.getSource(),
+                                        EntityArgument.getEntity(ctx, "target")))))
+                .then(Commands.literal("reputation")
+                        .executes(ctx -> reputation(ctx.getSource(), nearest(ctx.getSource())))
+                        .then(Commands.argument("target", EntityArgument.entity())
+                                .executes(ctx -> reputation(ctx.getSource(),
                                         EntityArgument.getEntity(ctx, "target"))))));
     }
 
@@ -124,6 +132,17 @@ public final class CensusCommand {
         Persona p = entity.getData(ModAttachments.PERSONA);
         Lineage lineage = entity.getData(ModAttachments.LINEAGE);
         source.sendSuccess(() -> describeFamily(p, lineage), false);
+        return 1;
+    }
+
+    private static int reputation(CommandSourceStack source, Entity entity) {
+        if (!validate(source, entity)) {
+            return 0;
+        }
+        Persona p = entity.getData(ModAttachments.PERSONA);
+        ReputationBook book = entity.getData(ModAttachments.REPUTATION);
+        UUID viewer = source.getEntity() != null ? source.getEntity().getUUID() : null;
+        source.sendSuccess(() -> describeReputation(p, book, viewer), false);
         return 1;
     }
 
@@ -239,7 +258,35 @@ public final class CensusCommand {
         return body;
     }
 
-    private static String shortId(java.util.UUID id) {
+    private static String shortId(UUID id) {
         return id.toString().substring(0, 8);
+    }
+
+    private static final int REPUTATION_LINES = 10;
+
+    private static Component describeReputation(Persona p, ReputationBook book, UUID viewer) {
+        MutableComponent body = Component.literal("")
+                .append(line(ChatFormatting.GOLD, "── " + p.fullName() + " — opinions ("
+                        + book.size() + ") ──"));
+        if (book.size() == 0) {
+            body.append(line(ChatFormatting.GRAY, "  (knows no one yet)"));
+            return body;
+        }
+        book.entries().stream()
+                .sorted(Comparator.comparingDouble((Map.Entry<UUID, Float> e) -> Math.abs(e.getValue())).reversed())
+                .limit(REPUTATION_LINES)
+                .forEach(e -> {
+                    boolean isViewer = e.getKey().equals(viewer);
+                    String who = (isViewer ? "you" : shortId(e.getKey()));
+                    body.append(line(opinionColor(e.getValue()),
+                            String.format("  %-10s %+6.1f", who, e.getValue())));
+                });
+        return body;
+    }
+
+    private static ChatFormatting opinionColor(float score) {
+        if (score > 5f) return ChatFormatting.GREEN;
+        if (score < -5f) return ChatFormatting.RED;
+        return ChatFormatting.GRAY;
     }
 }

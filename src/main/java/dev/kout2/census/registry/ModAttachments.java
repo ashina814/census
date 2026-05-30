@@ -5,6 +5,7 @@ import dev.kout2.census.emotion.EmotionalState;
 import dev.kout2.census.lineage.Lineage;
 import dev.kout2.census.memory.MemoryStream;
 import dev.kout2.census.persona.Persona;
+import dev.kout2.census.reputation.ReputationBook;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -60,6 +61,13 @@ public final class ModAttachments {
             ATTACHMENT_TYPES.register("lineage", () ->
                     AttachmentType.<Lineage>builder(() -> Lineage.FOUNDER)
                             .serialize(Lineage.MAP_CODEC)
+                            .build());
+
+    /** ReputationBook: opinions of others. Persisted, not synced (server logic). */
+    public static final Supplier<AttachmentType<ReputationBook>> REPUTATION =
+            ATTACHMENT_TYPES.register("reputation", () ->
+                    AttachmentType.<ReputationBook>builder(ReputationBook::new)
+                            .serialize(ReputationBook.MAP_CODEC)
                             .build());
 
     private ModAttachments() {}
