@@ -13,6 +13,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -22,7 +23,10 @@ import java.util.UUID;
  * {@code AvengeGoal}). Fires once, with a public vow.
  */
 public final class AvengerTrope implements Trope {
-    private static final float HATE_THRESHOLD = -20f;
+    /** Killing a relative needs only moderate hatred to provoke vengeance. */
+    private static final float KIN_HATE_THRESHOLD = -20f;
+    /** A purely personal grudge must run much deeper to make a villager fight back. */
+    private static final float PERSONAL_HATE_THRESHOLD = -60f;
     private static final double ANNOUNCE_RADIUS_SQR = 48.0 * 48.0;
 
     @Override
@@ -48,22 +52,36 @@ public final class AvengerTrope implements Trope {
         });
     }
 
-    /** The killer of a relative whom this (vengeful) mob now hates, if any. */
+    /**
+     * Who this vengeful mob will hunt, if anyone: the killer of a relative it
+     * has come to hate, or — failing that — anyone it hates deeply enough from
+     * personal torment.
+     */
     private Optional<UUID> findCulprit(LivingEntity mob) {
         if (!mob.hasData(ModAttachments.PERSONA)
                 || !mob.getData(ModAttachments.PERSONA).traits().contains(DerivedTrait.VENGEFUL)) {
             return Optional.empty();
         }
         ReputationBook reputation = mob.getData(ModAttachments.REPUTATION);
+
+        // (a) A killed relative — the classic revenge.
         for (MemoryEntry entry : mob.getData(ModAttachments.MEMORY).recent(64)) {
-            if (entry.type() == EventType.RELATIVE_KILLED && entry.subject().isPresent()) {
-                UUID culprit = entry.subject().get();
-                if (reputation.opinionOf(culprit) <= HATE_THRESHOLD) {
-                    return Optional.of(culprit);
-                }
+            if (entry.type() == EventType.RELATIVE_KILLED && entry.subject().isPresent()
+                    && reputation.opinionOf(entry.subject().get()) <= KIN_HATE_THRESHOLD) {
+                return Optional.of(entry.subject().get());
             }
         }
-        return Optional.empty();
+
+        // (b) A personal tormentor it has come to hate deeply.
+        UUID mostHated = null;
+        float worst = 0f;
+        for (Map.Entry<UUID, Float> opinion : reputation.entries()) {
+            if (opinion.getValue() < worst) {
+                worst = opinion.getValue();
+                mostHated = opinion.getKey();
+            }
+        }
+        return worst <= PERSONAL_HATE_THRESHOLD ? Optional.ofNullable(mostHated) : Optional.empty();
     }
 
     private void announce(ServerLevel level, LivingEntity mob) {
