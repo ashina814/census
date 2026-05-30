@@ -7,6 +7,7 @@ import dev.kout2.census.memory.MemoryEntry;
 import dev.kout2.census.memory.MemoryStream;
 import dev.kout2.census.persona.DerivedTrait;
 import dev.kout2.census.persona.Persona;
+import dev.kout2.census.reflection.Reflection;
 import dev.kout2.census.registry.ModAttachments;
 import dev.kout2.census.reputation.ReputationBook;
 import net.minecraft.ChatFormatting;
@@ -58,6 +59,14 @@ public final class CensusReport {
                         Component.translatable("census.opinion." + opinionKey(opinion)),
                         String.format("%+.0f", opinion)),
                 opinionColor(opinion));
+
+        // Standing state of mind (reflection)
+        Reflection insight = entity.getData(ModAttachments.REFLECTIONS).dominant();
+        if (insight != null) {
+            appendLine(card, Component.translatable("census.line.mind",
+                    Component.translatable("census.reflection." + insight.type().lowerName())),
+                    ChatFormatting.LIGHT_PURPLE);
+        }
 
         // Most recent memory
         List<MemoryEntry> recent = memory.recent(1);

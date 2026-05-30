@@ -15,6 +15,13 @@
   "census.line.feeling": "feeling: %s · mood: %s",
   "census.line.opinion": "thinks of you: %s (%s)",
   "census.line.last": "last: %s (%s)",
+  "census.line.mind": "mind: %s",
+
+  "census.reflection.resents": "holds a grudge",
+  "census.reflection.trusts": "trusts someone dear",
+  "census.reflection.grieving": "in mourning",
+  "census.reflection.traumatized": "deeply scarred",
+  "census.reflection.content": "at peace",
 
   "census.ago.seconds": "%ss ago",
   "census.ago.minutes": "%sm ago",

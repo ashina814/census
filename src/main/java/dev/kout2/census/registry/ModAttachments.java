@@ -6,6 +6,7 @@ import dev.kout2.census.lineage.Lineage;
 import dev.kout2.census.memory.MemoryStream;
 import dev.kout2.census.narrative.NarrativeState;
 import dev.kout2.census.persona.Persona;
+import dev.kout2.census.reflection.Reflections;
 import dev.kout2.census.reputation.ReputationBook;
 import dev.kout2.census.social.Household;
 import net.neoforged.bus.api.IEventBus;
@@ -85,6 +86,13 @@ public final class ModAttachments {
             ATTACHMENT_TYPES.register("household", () ->
                     AttachmentType.<Household>builder(Household::new)
                             .serialize(Household.MAP_CODEC)
+                            .build());
+
+    /** Reflections: distilled insights. Persisted, not synced (book reads it). */
+    public static final Supplier<AttachmentType<Reflections>> REFLECTIONS =
+            ATTACHMENT_TYPES.register("reflections", () ->
+                    AttachmentType.<Reflections>builder(Reflections::new)
+                            .serialize(Reflections.MAP_CODEC)
                             .build());
 
     private ModAttachments() {}

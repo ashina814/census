@@ -4,6 +4,7 @@ import dev.kout2.census.Census;
 import dev.kout2.census.CensusMod;
 import dev.kout2.census.census.CensusRegistry;
 import dev.kout2.census.memory.EventType;
+import dev.kout2.census.reflection.Reflector;
 import dev.kout2.census.registry.ModAttachments;
 import dev.kout2.census.reputation.Gossip;
 import dev.kout2.census.social.SocialBonds;
@@ -83,6 +84,9 @@ public final class SocialEventHandlers {
                 }
                 if (anyGrief) {
                     deliverGrief(registry, villager);
+                }
+                if (Reflector.isDue(villager, now)) {
+                    Reflector.reflect(villager, now);
                 }
                 SocialBonds.tryReproduce(level, villager, now);
                 if (meetingBudget > 0 && villager.getRandom().nextFloat() < MEET_CHANCE) {

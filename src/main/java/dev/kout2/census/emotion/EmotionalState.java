@@ -73,6 +73,15 @@ public final class EmotionalState {
         return mood;
     }
 
+    /**
+     * Drags the baseline mood a fraction {@code alpha} toward a target PAD point.
+     * Used by reflection to let lasting insights (trauma, grief, contentment)
+     * slowly colour temperament, independent of momentary emotions.
+     */
+    public void pullMood(float tp, float ta, float td, float alpha) {
+        this.mood = mood.lerp(tp, ta, td, alpha);
+    }
+
     /** The strongest current emotion, or {@code null} if all are negligible. */
     public Emotion dominant() {
         Emotion best = null;

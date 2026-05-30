@@ -15,6 +15,13 @@
   "census.line.feeling": "気分: %s ・ 機嫌: %s",
   "census.line.opinion": "あなたへの感情: %s (%s)",
   "census.line.last": "直近: %s (%s)",
+  "census.line.mind": "心境: %s",
+
+  "census.reflection.resents": "誰かを恨んでいる",
+  "census.reflection.trusts": "誰かを信頼している",
+  "census.reflection.grieving": "喪に服している",
+  "census.reflection.traumatized": "心に傷を負っている",
+  "census.reflection.content": "満ち足りている",
 
   "census.ago.seconds": "%s秒前",
   "census.ago.minutes": "%s分前",
