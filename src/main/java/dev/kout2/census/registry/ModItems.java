@@ -1,6 +1,7 @@
 package dev.kout2.census.registry;
 
 import dev.kout2.census.CensusMod;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -16,6 +17,9 @@ public final class ModItems {
 
     public static final DeferredItem<Item> CENSUS_BOOK =
             ITEMS.registerSimpleItem("census_book", props -> props.stacksTo(1));
+
+    public static final DeferredItem<BlockItem> GRAVESTONE =
+            ITEMS.registerSimpleBlockItem(ModBlocks.GRAVESTONE);
 
     private ModItems() {}
 

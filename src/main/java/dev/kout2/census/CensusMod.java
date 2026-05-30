@@ -2,6 +2,8 @@ package dev.kout2.census;
 
 import com.mojang.logging.LogUtils;
 import dev.kout2.census.registry.ModAttachments;
+import dev.kout2.census.registry.ModBlockEntities;
+import dev.kout2.census.registry.ModBlocks;
 import dev.kout2.census.registry.ModItems;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -48,12 +50,15 @@ public class CensusMod {
                     .icon(() -> ModItems.CENSUS_BOOK.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.CENSUS_BOOK.get());
+                        output.accept(ModItems.GRAVESTONE.get());
                     }).build());
 
     public CensusMod(IEventBus modEventBus, ModContainer modContainer) {
         modEventBus.addListener(this::commonSetup);
 
         // Registry bootstrap
+        ModBlocks.register(modEventBus);
+        ModBlockEntities.register(modEventBus);
         ModItems.register(modEventBus);
         ModAttachments.register(modEventBus);
         CREATIVE_MODE_TABS.register(modEventBus);

@@ -2,6 +2,11 @@
   "itemGroup.census": "戸籍",
   "item.census.census_book": "戸籍書",
   "item.census.census_book.tip": "右クリックで対象の人物像を読む",
+  "block.census.gravestone": "墓石",
+
+  "census.grave.here": "ここに眠る",
+  "census.grave.died": "命日: %s日目",
+  "census.grave.slain_by": "%s に討たれる",
 
   "census.trope.avenger": "%s は肉親の仇に復讐を誓った……！",
 

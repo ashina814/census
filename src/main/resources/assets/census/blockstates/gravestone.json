@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "": { "model": "census:block/gravestone" }
+  }
+}

@@ -2,12 +2,17 @@ package dev.kout2.census.event;
 
 import dev.kout2.census.Census;
 import dev.kout2.census.CensusMod;
+import dev.kout2.census.block.GravestoneBlockEntity;
 import dev.kout2.census.memory.EventType;
+import dev.kout2.census.persona.Persona;
 import dev.kout2.census.registry.ModAttachments;
+import dev.kout2.census.registry.ModBlocks;
 import dev.kout2.census.social.SocialBonds;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -88,6 +93,34 @@ public final class MemoryEventHandlers {
                 Census.observe(witness, EventType.WITNESSED_DEATH, deadEntityId);
             }
         }
+
+        if (dead.hasData(ModAttachments.PERSONA)) {
+            placeGravestone(dead, killer);
+        }
+    }
+
+    /** Leaves a headstone where a censused mob fell, inscribed with its epitaph. */
+    private static void placeGravestone(LivingEntity dead, Entity killer) {
+        Level level = dead.level();
+        BlockPos pos = dead.blockPosition();
+        if (!isReplaceable(level, pos)) {
+            pos = pos.above();
+            if (!isReplaceable(level, pos)) {
+                return;
+            }
+        }
+        level.setBlockAndUpdate(pos, ModBlocks.GRAVESTONE.get().defaultBlockState());
+        if (level.getBlockEntity(pos) instanceof GravestoneBlockEntity grave) {
+            Persona persona = dead.getData(ModAttachments.PERSONA);
+            int generation = dead.getData(ModAttachments.LINEAGE).generation();
+            long day = level.getGameTime() / 24000L;
+            String killerName = killer != null ? killer.getName().getString() : "";
+            grave.inscribe(persona.fullName(), generation, day, killerName);
+        }
+    }
+
+    private static boolean isReplaceable(Level level, BlockPos pos) {
+        return level.getBlockState(pos).canBeReplaced();
     }
 
     private static boolean isChildOf(LivingEntity entity, UUID parentPersonaId) {
