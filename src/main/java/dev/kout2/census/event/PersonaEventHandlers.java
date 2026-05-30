@@ -1,6 +1,7 @@
 package dev.kout2.census.event;
 
 import dev.kout2.census.CensusMod;
+import dev.kout2.census.ai.FleeThreatGoal;
 import dev.kout2.census.lineage.Lineage;
 import dev.kout2.census.persona.Persona;
 import dev.kout2.census.persona.generator.PersonaGenerator;
@@ -40,6 +41,10 @@ public final class PersonaEventHandlers {
         if (!(event.getEntity() instanceof Villager villager)) {
             return;
         }
+        // Census goals live on the (non-persisted) goalSelector, so they must be
+        // (re)installed on every join — including villagers loaded from disk.
+        installGoals(villager);
+
         // Already censused (e.g. loaded from disk) — attachments deserialize
         // before the entity joins, so this guard preserves existing identities.
         if (villager.hasData(ModAttachments.PERSONA)) {
@@ -68,6 +73,11 @@ public final class PersonaEventHandlers {
         villager.setData(ModAttachments.PERSONA, persona);
         villager.setData(ModAttachments.LINEAGE, lineage);
         applyNameTag(villager, persona);
+    }
+
+    /** Installs Census behaviours onto the villager's goal selector (idempotent per join). */
+    private static void installGoals(Villager villager) {
+        villager.goalSelector.addGoal(1, new FleeThreatGoal(villager));
     }
 
     /** The (up to two) nearest censused adult villagers — the presumed parents. */
