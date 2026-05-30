@@ -34,6 +34,12 @@ import java.util.List;
 public final class CensusHudOverlay {
     private static final int LINE_HEIGHT = 10;
     private static final int TOP_MARGIN = 6;
+    private static final long REBUILD_INTERVAL_MS = 200L;
+
+    // Cache so we don't allocate translatable Components every single frame.
+    private static int cachedTargetId = -1;
+    private static long cachedAtMs = 0L;
+    private static List<Component> cachedLines = List.of();
 
     private CensusHudOverlay() {}
 
@@ -52,7 +58,13 @@ public final class CensusHudOverlay {
             return; // placeholder default, not a real persona
         }
 
-        List<Component> lines = buildLines(target, persona);
+        long nowMs = System.currentTimeMillis();
+        if (target.getId() != cachedTargetId || nowMs - cachedAtMs > REBUILD_INTERVAL_MS) {
+            cachedLines = buildLines(target, persona);
+            cachedTargetId = target.getId();
+            cachedAtMs = nowMs;
+        }
+        List<Component> lines = cachedLines;
         GuiGraphics graphics = event.getGuiGraphics();
         Font font = mc.font;
         int screenWidth = mc.getWindow().getGuiScaledWidth();
