@@ -3,6 +3,8 @@
   "item.census.census_book": "Census Book",
   "item.census.census_book.tip": "Right-click a mob to read its persona",
 
+  "census.trope.avenger": "%s has sworn vengeance for their kin…!",
+
   "census.gen": "(gen %s)",
   "census.calm": "calm",
   "census.line.feeling": "feeling: %s · mood: %s",

@@ -4,6 +4,7 @@ import dev.kout2.census.emotion.appraisal.Appraiser;
 import dev.kout2.census.memory.EventType;
 import dev.kout2.census.memory.Memories;
 import dev.kout2.census.memory.MemoryEntry;
+import dev.kout2.census.narrative.NarrativeEngine;
 import dev.kout2.census.persona.Persona;
 import dev.kout2.census.registry.ModAttachments;
 import net.minecraft.world.entity.LivingEntity;
@@ -40,5 +41,7 @@ public final class Census {
             float delta = entry.importance() * entry.valence() * REPUTATION_SCALE;
             holder.getData(ModAttachments.REPUTATION).adjust(subject, delta);
         }
+        // A fresh memory may complete a narrative trope (e.g. the Avenger).
+        NarrativeEngine.evaluate(holder, holder.level().getGameTime());
     }
 }

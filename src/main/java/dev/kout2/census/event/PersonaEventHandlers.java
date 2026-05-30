@@ -1,6 +1,7 @@
 package dev.kout2.census.event;
 
 import dev.kout2.census.CensusMod;
+import dev.kout2.census.ai.AvengeGoal;
 import dev.kout2.census.ai.FleeThreatGoal;
 import dev.kout2.census.lineage.Lineage;
 import dev.kout2.census.persona.Persona;
@@ -77,6 +78,8 @@ public final class PersonaEventHandlers {
 
     /** Installs Census behaviours onto the villager's goal selector (idempotent per join). */
     private static void installGoals(Villager villager) {
+        // Avenge (0) outranks Flee (1): a sworn avenger advances where it would flee.
+        villager.goalSelector.addGoal(0, new AvengeGoal(villager));
         villager.goalSelector.addGoal(1, new FleeThreatGoal(villager));
     }
 

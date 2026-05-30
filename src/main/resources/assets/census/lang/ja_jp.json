@@ -3,6 +3,8 @@
   "item.census.census_book": "戸籍書",
   "item.census.census_book.tip": "右クリックで対象の人物像を読む",
 
+  "census.trope.avenger": "%s は肉親の仇に復讐を誓った……！",
+
   "census.gen": "（第%s世代）",
   "census.calm": "平静",
   "census.line.feeling": "気分: %s ・ 機嫌: %s",

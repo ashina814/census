@@ -4,6 +4,7 @@ import dev.kout2.census.CensusMod;
 import dev.kout2.census.emotion.EmotionalState;
 import dev.kout2.census.lineage.Lineage;
 import dev.kout2.census.memory.MemoryStream;
+import dev.kout2.census.narrative.NarrativeState;
 import dev.kout2.census.persona.Persona;
 import dev.kout2.census.reputation.ReputationBook;
 import net.neoforged.bus.api.IEventBus;
@@ -68,6 +69,13 @@ public final class ModAttachments {
             ATTACHMENT_TYPES.register("reputation", () ->
                     AttachmentType.<ReputationBook>builder(ReputationBook::new)
                             .serialize(ReputationBook.MAP_CODEC)
+                            .build());
+
+    /** NarrativeState: fired tropes + avenge target. Persisted, not synced. */
+    public static final Supplier<AttachmentType<NarrativeState>> NARRATIVE =
+            ATTACHMENT_TYPES.register("narrative", () ->
+                    AttachmentType.<NarrativeState>builder(NarrativeState::new)
+                            .serialize(NarrativeState.MAP_CODEC)
                             .build());
 
     private ModAttachments() {}
