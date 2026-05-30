@@ -3,6 +3,7 @@ package dev.kout2.census.event;
 import dev.kout2.census.CensusMod;
 import dev.kout2.census.ai.AvengeGoal;
 import dev.kout2.census.ai.FleeThreatGoal;
+import dev.kout2.census.config.CensusConfig;
 import dev.kout2.census.lineage.Lineage;
 import dev.kout2.census.persona.Persona;
 import dev.kout2.census.persona.generator.PersonaGenerator;
@@ -93,9 +94,9 @@ public final class PersonaEventHandlers {
                 .toList();
     }
 
-    /** Shows the persona's full name above the villager via the vanilla name tag. */
+    /** Names the villager; visibility follows config (HUD shows it regardless). */
     private static void applyNameTag(Villager villager, Persona persona) {
         villager.setCustomName(Component.literal(persona.fullName()));
-        villager.setCustomNameVisible(true);
+        villager.setCustomNameVisible(CensusConfig.NAME_TAGS_ALWAYS_VISIBLE.get());
     }
 }

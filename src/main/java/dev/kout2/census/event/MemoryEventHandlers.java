@@ -3,6 +3,7 @@ package dev.kout2.census.event;
 import dev.kout2.census.Census;
 import dev.kout2.census.CensusMod;
 import dev.kout2.census.block.GravestoneBlockEntity;
+import dev.kout2.census.config.CensusConfig;
 import dev.kout2.census.memory.EventType;
 import dev.kout2.census.persona.Persona;
 import dev.kout2.census.registry.ModAttachments;
@@ -94,7 +95,7 @@ public final class MemoryEventHandlers {
             }
         }
 
-        if (dead.hasData(ModAttachments.PERSONA)) {
+        if (dead.hasData(ModAttachments.PERSONA) && CensusConfig.GRAVESTONES_ENABLED.get()) {
             placeGravestone(dead, killer);
         }
     }

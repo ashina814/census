@@ -3,6 +3,7 @@ package dev.kout2.census.reputation;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import dev.kout2.census.config.CensusConfig;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -56,6 +57,31 @@ public final class ReputationBook {
 
     public void set(UUID id, float value) {
         opinions.put(id, Math.clamp(value, MIN, MAX));
+        prune();
+    }
+
+    /**
+     * Keeps the map bounded: when it exceeds the configured cap, forget the
+     * weakest (closest-to-neutral) opinion — the one least likely to matter.
+     * Prevents unbounded growth as a mob meets ever more entities.
+     */
+    private void prune() {
+        int max = CensusConfig.REPUTATION_MAX_ENTRIES.get();
+        while (opinions.size() > max) {
+            UUID weakest = null;
+            float weakestMag = Float.MAX_VALUE;
+            for (Map.Entry<UUID, Float> e : opinions.entrySet()) {
+                float mag = Math.abs(e.getValue());
+                if (mag < weakestMag) {
+                    weakestMag = mag;
+                    weakest = e.getKey();
+                }
+            }
+            if (weakest == null) {
+                break;
+            }
+            opinions.remove(weakest);
+        }
     }
 
     public Set<Map.Entry<UUID, Float>> entries() {
