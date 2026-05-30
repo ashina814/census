@@ -1,4 +1,5 @@
 {
   "itemGroup.census": "戸籍",
-  "item.census.census_book": "戸籍書"
+  "item.census.census_book": "戸籍書",
+  "item.census.census_book.tip": "右クリックで対象の人物像を読む"
 }

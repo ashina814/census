@@ -1,4 +1,5 @@
 {
   "itemGroup.census": "Census",
-  "item.census.census_book": "Census Book"
+  "item.census.census_book": "Census Book",
+  "item.census.census_book.tip": "Right-click a mob to read its persona"
 }
