@@ -5,6 +5,7 @@ import dev.kout2.census.CensusMod;
 import dev.kout2.census.emotion.Emotion;
 import dev.kout2.census.emotion.EmotionalState;
 import dev.kout2.census.emotion.PADMood;
+import dev.kout2.census.lineage.Lineage;
 import dev.kout2.census.memory.MemoryEntry;
 import dev.kout2.census.memory.MemoryStream;
 import dev.kout2.census.persona.BigFive;
@@ -64,6 +65,11 @@ public final class CensusCommand {
                         .executes(ctx -> emotion(ctx.getSource(), nearest(ctx.getSource())))
                         .then(Commands.argument("target", EntityArgument.entity())
                                 .executes(ctx -> emotion(ctx.getSource(),
+                                        EntityArgument.getEntity(ctx, "target")))))
+                .then(Commands.literal("family")
+                        .executes(ctx -> family(ctx.getSource(), nearest(ctx.getSource())))
+                        .then(Commands.argument("target", EntityArgument.entity())
+                                .executes(ctx -> family(ctx.getSource(),
                                         EntityArgument.getEntity(ctx, "target"))))));
     }
 
@@ -108,6 +114,16 @@ public final class CensusCommand {
         long now = source.getLevel().getGameTime();
         state.decayTo(now); // show current values, not last-touched
         source.sendSuccess(() -> describeEmotion(p, state), false);
+        return 1;
+    }
+
+    private static int family(CommandSourceStack source, Entity entity) {
+        if (!validate(source, entity)) {
+            return 0;
+        }
+        Persona p = entity.getData(ModAttachments.PERSONA);
+        Lineage lineage = entity.getData(ModAttachments.LINEAGE);
+        source.sendSuccess(() -> describeFamily(p, lineage), false);
         return 1;
     }
 
@@ -209,5 +225,21 @@ public final class CensusCommand {
                 "  mood: %s  (P%+.2f A%+.2f D%+.2f)",
                 mood.label(), mood.pleasure(), mood.arousal(), mood.dominance())));
         return body;
+    }
+
+    private static Component describeFamily(Persona p, Lineage lineage) {
+        MutableComponent body = Component.literal("")
+                .append(line(ChatFormatting.GOLD, "── " + p.fullName() + " — family ──"))
+                .append(line(ChatFormatting.GRAY, "  generation: " + lineage.generation()
+                        + (lineage.hasParents() ? "" : " (founder)")));
+        lineage.parentA().ifPresent(id ->
+                body.append(line(ChatFormatting.GRAY, "  parent A: " + shortId(id))));
+        lineage.parentB().ifPresent(id ->
+                body.append(line(ChatFormatting.GRAY, "  parent B: " + shortId(id))));
+        return body;
+    }
+
+    private static String shortId(java.util.UUID id) {
+        return id.toString().substring(0, 8);
     }
 }

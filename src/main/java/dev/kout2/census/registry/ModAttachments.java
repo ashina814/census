@@ -2,6 +2,7 @@ package dev.kout2.census.registry;
 
 import dev.kout2.census.CensusMod;
 import dev.kout2.census.emotion.EmotionalState;
+import dev.kout2.census.lineage.Lineage;
 import dev.kout2.census.memory.MemoryStream;
 import dev.kout2.census.persona.Persona;
 import net.neoforged.bus.api.IEventBus;
@@ -52,6 +53,13 @@ public final class ModAttachments {
                     AttachmentType.<EmotionalState>builder(EmotionalState::new)
                             .serialize(EmotionalState.MAP_CODEC)
                             .sync(EmotionalState.STREAM_CODEC)
+                            .build());
+
+    /** Lineage: persisted, not synced. Defaults to a founder (no parents). */
+    public static final Supplier<AttachmentType<Lineage>> LINEAGE =
+            ATTACHMENT_TYPES.register("lineage", () ->
+                    AttachmentType.<Lineage>builder(() -> Lineage.FOUNDER)
+                            .serialize(Lineage.MAP_CODEC)
                             .build());
 
     private ModAttachments() {}

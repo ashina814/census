@@ -15,6 +15,7 @@ import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Turns gameplay events into observations on censused mobs. Each call to
@@ -54,18 +55,36 @@ public final class MemoryEventHandlers {
         }
     }
 
-    /** Nearby censused mobs remember witnessing a death. */
+    /**
+     * Nearby censused mobs remember a death. A child of the deceased grieves
+     * far harder — RELATIVE_KILLED, blamed on the killer (the seed of a future
+     * revenge) — while everyone else merely WITNESSED_DEATH.
+     */
     @SubscribeEvent
     public static void onDeath(LivingDeathEvent event) {
         LivingEntity dead = event.getEntity();
         if (dead.level().isClientSide()) {
             return;
         }
+        UUID deadPersonaId = dead.hasData(ModAttachments.PERSONA)
+                ? dead.getData(ModAttachments.PERSONA).id() : null;
+        Entity killer = event.getSource().getEntity();
+        UUID killerId = killer != null ? killer.getUUID() : null;
+
         AABB box = dead.getBoundingBox().inflate(WITNESS_RADIUS);
         List<LivingEntity> witnesses = dead.level().getEntitiesOfClass(LivingEntity.class, box,
                 e -> e != dead && e.hasData(ModAttachments.PERSONA));
         for (LivingEntity witness : witnesses) {
-            Census.observe(witness, EventType.WITNESSED_DEATH, dead.getUUID());
+            if (deadPersonaId != null && isChildOf(witness, deadPersonaId)) {
+                Census.observe(witness, EventType.RELATIVE_KILLED, killerId);
+            } else {
+                Census.observe(witness, EventType.WITNESSED_DEATH, dead.getUUID());
+            }
         }
+    }
+
+    private static boolean isChildOf(LivingEntity entity, UUID parentPersonaId) {
+        return entity.hasData(ModAttachments.LINEAGE)
+                && entity.getData(ModAttachments.LINEAGE).isChildOf(parentPersonaId);
     }
 }
