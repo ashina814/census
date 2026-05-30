@@ -65,10 +65,6 @@ public final class MemoryStream {
         return slice;
     }
 
-    public List<MemoryEntry> all() {
-        return List.copyOf(observations);
-    }
-
     public int size() {
         return observations.size();
     }

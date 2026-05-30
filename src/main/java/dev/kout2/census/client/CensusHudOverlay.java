@@ -1,5 +1,6 @@
 package dev.kout2.census.client;
 
+import dev.kout2.census.Census;
 import dev.kout2.census.CensusMod;
 import dev.kout2.census.emotion.Emotion;
 import dev.kout2.census.emotion.EmotionalState;
@@ -50,7 +51,7 @@ public final class CensusHudOverlay {
             return;
         }
         if (!(mc.crosshairPickEntity instanceof LivingEntity target)
-                || !target.hasData(ModAttachments.PERSONA)) {
+                || !Census.isCensused(target)) {
             return;
         }
         Persona persona = target.getData(ModAttachments.PERSONA);

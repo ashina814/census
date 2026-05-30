@@ -1,7 +1,7 @@
 package dev.kout2.census.event;
 
+import dev.kout2.census.Census;
 import dev.kout2.census.CensusMod;
-import dev.kout2.census.registry.ModAttachments;
 import dev.kout2.census.registry.ModItems;
 import dev.kout2.census.report.CensusReport;
 import net.minecraft.ChatFormatting;
@@ -34,8 +34,7 @@ public final class InspectionHandler {
         if (!event.getItemStack().is(ModItems.CENSUS_BOOK.get())) {
             return;
         }
-        if (!(event.getTarget() instanceof LivingEntity target)
-                || !target.hasData(ModAttachments.PERSONA)) {
+        if (!(event.getTarget() instanceof LivingEntity target) || !Census.isCensused(target)) {
             return;
         }
         Player player = event.getEntity();

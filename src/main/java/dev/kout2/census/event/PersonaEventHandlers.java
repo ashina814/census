@@ -1,5 +1,6 @@
 package dev.kout2.census.event;
 
+import dev.kout2.census.Census;
 import dev.kout2.census.CensusMod;
 import dev.kout2.census.ai.AvengeGoal;
 import dev.kout2.census.ai.FleeThreatGoal;
@@ -49,7 +50,7 @@ public final class PersonaEventHandlers {
 
         // Already censused (e.g. loaded from disk) — attachments deserialize
         // before the entity joins, so this guard preserves existing identities.
-        if (villager.hasData(ModAttachments.PERSONA)) {
+        if (Census.isCensused(villager)) {
             return;
         }
 
@@ -88,7 +89,7 @@ public final class PersonaEventHandlers {
     private static List<Villager> findParents(Villager baby) {
         AABB box = baby.getBoundingBox().inflate(PARENT_SEARCH_RADIUS);
         return baby.level().getEntitiesOfClass(Villager.class, box,
-                        v -> v != baby && !v.isBaby() && v.hasData(ModAttachments.PERSONA)).stream()
+                        v -> v != baby && !v.isBaby() && Census.isCensused(v)).stream()
                 .sorted(Comparator.comparingDouble(v -> v.distanceToSqr(baby)))
                 .limit(2)
                 .toList();

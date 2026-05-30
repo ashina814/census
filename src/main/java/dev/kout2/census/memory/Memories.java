@@ -17,23 +17,13 @@ public final class Memories {
     private Memories() {}
 
     /**
-     * Records an event on {@code holder} if it has a persona. Convenience wrapper
-     * that looks up the persona itself.
+     * Records an event using an already-resolved persona. Importance is scored
+     * from the personality; valence comes from the event type. Always routed
+     * through {@link dev.kout2.census.Census#observe} so memory, emotion and
+     * narrative stay in lock-step — there is intentionally no persona-less
+     * shortcut that would bypass that fan-out.
      *
      * @param subject the other party's UUID (player or mob), or {@code null}
-     */
-    public static void record(LivingEntity holder, EventType type, @Nullable UUID subject) {
-        if (!holder.hasData(ModAttachments.PERSONA)) {
-            return;
-        }
-        record(holder, holder.getData(ModAttachments.PERSONA), type, subject);
-    }
-
-    /**
-     * Records an event using an already-resolved persona (avoids a second
-     * attachment lookup when the caller has it). Importance is scored from the
-     * personality; valence comes from the event type.
-     *
      * @return the stored entry, so callers can reuse its importance/valence
      */
     public static MemoryEntry record(LivingEntity holder, Persona persona, EventType type,

@@ -1,6 +1,7 @@
 package dev.kout2.census.command;
 
 import com.mojang.brigadier.CommandDispatcher;
+import dev.kout2.census.Census;
 import dev.kout2.census.CensusMod;
 import dev.kout2.census.emotion.Emotion;
 import dev.kout2.census.emotion.EmotionalState;
@@ -87,7 +88,7 @@ public final class CensusCommand {
         Vec3 origin = source.getPosition();
         AABB box = AABB.ofSize(origin, SEARCH_RADIUS * 2, SEARCH_RADIUS * 2, SEARCH_RADIUS * 2);
         return level.getEntitiesOfClass(Villager.class, box,
-                        v -> v.hasData(ModAttachments.PERSONA)).stream()
+                        Census::isCensused).stream()
                 .min(Comparator.comparingDouble(v -> v.distanceToSqr(origin)))
                 .orElse(null);
     }
@@ -153,7 +154,7 @@ public final class CensusCommand {
                     "No censused villager within " + (int) SEARCH_RADIUS + " blocks."));
             return false;
         }
-        if (!entity.hasData(ModAttachments.PERSONA)) {
+        if (!Census.isCensused(entity)) {
             source.sendFailure(Component.literal(
                     entity.getName().getString() + " has no persona."));
             return false;

@@ -5,6 +5,8 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.kout2.census.config.CensusConfig;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -63,29 +65,21 @@ public final class ReputationBook {
     /**
      * Keeps the map bounded: when it exceeds the configured cap, forget the
      * weakest (closest-to-neutral) opinion — the one least likely to matter.
-     * Prevents unbounded growth as a mob meets ever more entities.
+     * Early-outs in the common (under-cap) case so the per-write cost stays O(1);
+     * since {@link #set} adds at most one entry, a single eviction suffices.
      */
     private void prune() {
-        int max = CensusConfig.REPUTATION_MAX_ENTRIES.get();
-        while (opinions.size() > max) {
-            UUID weakest = null;
-            float weakestMag = Float.MAX_VALUE;
-            for (Map.Entry<UUID, Float> e : opinions.entrySet()) {
-                float mag = Math.abs(e.getValue());
-                if (mag < weakestMag) {
-                    weakestMag = mag;
-                    weakest = e.getKey();
-                }
-            }
-            if (weakest == null) {
-                break;
-            }
-            opinions.remove(weakest);
+        if (opinions.size() <= CensusConfig.REPUTATION_MAX_ENTRIES.get()) {
+            return;
         }
+        opinions.entrySet().stream()
+                .min(Comparator.comparingDouble(e -> Math.abs(e.getValue())))
+                .ifPresent(e -> opinions.remove(e.getKey()));
     }
 
+    /** Read-only view (no defensive copy); callers must not mutate this book while iterating. */
     public Set<Map.Entry<UUID, Float>> entries() {
-        return Map.copyOf(opinions).entrySet();
+        return Collections.unmodifiableSet(opinions.entrySet());
     }
 
     public int size() {

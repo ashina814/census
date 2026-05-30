@@ -1,5 +1,6 @@
 package dev.kout2.census.narrative.tropes;
 
+import dev.kout2.census.Census;
 import dev.kout2.census.memory.EventType;
 import dev.kout2.census.memory.MemoryEntry;
 import dev.kout2.census.narrative.Trope;
@@ -58,7 +59,7 @@ public final class AvengerTrope implements Trope {
      * personal torment.
      */
     private Optional<UUID> findCulprit(LivingEntity mob) {
-        if (!mob.hasData(ModAttachments.PERSONA)
+        if (!Census.isCensused(mob)
                 || !mob.getData(ModAttachments.PERSONA).traits().contains(DerivedTrait.VENGEFUL)) {
             return Optional.empty();
         }

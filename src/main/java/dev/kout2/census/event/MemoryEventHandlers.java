@@ -42,7 +42,7 @@ public final class MemoryEventHandlers {
     @SubscribeEvent
     public static void onDamage(LivingDamageEvent.Post event) {
         LivingEntity victim = event.getEntity();
-        if (victim.level().isClientSide() || !victim.hasData(ModAttachments.PERSONA)) {
+        if (victim.level().isClientSide() || !Census.isCensused(victim)) {
             return;
         }
         Entity attacker = event.getSource().getEntity();
@@ -56,7 +56,7 @@ public final class MemoryEventHandlers {
             return;
         }
         if (event.getTarget() instanceof LivingEntity target
-                && target.hasData(ModAttachments.PERSONA)
+                && Census.isCensused(target)
                 && event.getItemStack().has(DataComponents.FOOD)) {
             Census.observe(target, EventType.FED, event.getEntity().getUUID());
         }
@@ -76,7 +76,7 @@ public final class MemoryEventHandlers {
         if (dead.level().isClientSide()) {
             return;
         }
-        UUID deadPersonaId = dead.hasData(ModAttachments.PERSONA)
+        UUID deadPersonaId = Census.isCensused(dead)
                 ? dead.getData(ModAttachments.PERSONA).id() : null;
         UUID deadEntityId = dead.getUUID();
         Entity killer = event.getSource().getEntity();
@@ -84,7 +84,7 @@ public final class MemoryEventHandlers {
 
         AABB box = dead.getBoundingBox().inflate(WITNESS_RADIUS);
         List<LivingEntity> witnesses = dead.level().getEntitiesOfClass(LivingEntity.class, box,
-                e -> e != dead && e.hasData(ModAttachments.PERSONA));
+                e -> e != dead && Census.isCensused(e));
         for (LivingEntity witness : witnesses) {
             boolean loved = (deadPersonaId != null && isChildOf(witness, deadPersonaId))
                     || SocialBonds.bondToward(witness, deadEntityId) >= SocialBonds.GRIEF_BOND;
@@ -95,7 +95,7 @@ public final class MemoryEventHandlers {
             }
         }
 
-        if (dead.hasData(ModAttachments.PERSONA) && CensusConfig.GRAVESTONES_ENABLED.get()) {
+        if (Census.isCensused(dead) && CensusConfig.GRAVESTONES_ENABLED.get()) {
             placeGravestone(dead, killer);
         }
     }

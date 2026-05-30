@@ -1,5 +1,6 @@
 package dev.kout2.census.ai;
 
+import dev.kout2.census.Census;
 import dev.kout2.census.emotion.Emotion;
 import dev.kout2.census.emotion.EmotionalState;
 import dev.kout2.census.persona.BigFive;
@@ -35,7 +36,7 @@ public final class UtilityScorer {
      * ground until the grudge runs deep.
      */
     public static float fleeDesire(LivingEntity mob, Player player) {
-        if (!mob.hasData(ModAttachments.PERSONA)) {
+        if (!Census.isCensused(mob)) {
             return 0f;
         }
         Persona persona = mob.getData(ModAttachments.PERSONA);

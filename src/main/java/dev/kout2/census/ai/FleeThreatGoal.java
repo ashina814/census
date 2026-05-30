@@ -1,6 +1,6 @@
 package dev.kout2.census.ai;
 
-import dev.kout2.census.registry.ModAttachments;
+import dev.kout2.census.Census;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.util.DefaultRandomPos;
@@ -44,7 +44,7 @@ public final class FleeThreatGoal extends Goal {
             return false;
         }
         scanCooldown = SCAN_INTERVAL;
-        if (!mob.hasData(ModAttachments.PERSONA)) {
+        if (!Census.isCensused(mob)) {
             return false;
         }
         Player nearest = mob.level().getNearestPlayer(mob, SCAN_RADIUS);

@@ -7,6 +7,7 @@ import dev.kout2.census.memory.MemoryEntry;
 import dev.kout2.census.narrative.NarrativeEngine;
 import dev.kout2.census.persona.Persona;
 import dev.kout2.census.registry.ModAttachments;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import org.jetbrains.annotations.Nullable;
 
@@ -28,8 +29,17 @@ public final class Census {
 
     private Census() {}
 
+    /**
+     * Whether an entity is part of the Census — i.e. carries a Persona. The one
+     * place this membership is defined; everything else asks through here so the
+     * eligible-mob set can broaden (M6) without hunting down scattered checks.
+     */
+    public static boolean isCensused(Entity entity) {
+        return entity.hasData(ModAttachments.PERSONA);
+    }
+
     public static void observe(LivingEntity holder, EventType type, @Nullable UUID subject) {
-        if (!holder.hasData(ModAttachments.PERSONA)) {
+        if (!isCensused(holder)) {
             return;
         }
         Persona persona = holder.getData(ModAttachments.PERSONA);

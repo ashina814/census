@@ -1,5 +1,6 @@
 package dev.kout2.census.social;
 
+import dev.kout2.census.Census;
 import dev.kout2.census.lineage.Lineage;
 import dev.kout2.census.persona.Persona;
 import dev.kout2.census.persona.generator.PersonaGenerator;
@@ -60,7 +61,7 @@ public final class SocialBonds {
         if (aToB < COURTSHIP_BOND || bToA < COURTSHIP_BOND) {
             return;
         }
-        if (!a.hasData(ModAttachments.PERSONA) || !b.hasData(ModAttachments.PERSONA)) {
+        if (!Census.isCensused(a) || !Census.isCensused(b)) {
             return;
         }
         ha.setPartner(b.getUUID(), b.getData(ModAttachments.PERSONA).id());

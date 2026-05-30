@@ -1,7 +1,7 @@
 package dev.kout2.census.event;
 
+import dev.kout2.census.Census;
 import dev.kout2.census.CensusMod;
-import dev.kout2.census.registry.ModAttachments;
 import dev.kout2.census.reputation.Gossip;
 import dev.kout2.census.social.SocialBonds;
 import net.minecraft.server.MinecraftServer;
@@ -44,7 +44,7 @@ public final class SocialEventHandlers {
         int budget = MAX_PAIRS;
         for (ServerLevel level : server.getAllLevels()) {
             List<? extends Villager> villagers =
-                    level.getEntities(EntityType.VILLAGER, v -> v.hasData(ModAttachments.PERSONA));
+                    level.getEntities(EntityType.VILLAGER, Census::isCensused);
             for (Villager villager : villagers) {
                 // Couples may bear a child (heavily gated inside).
                 SocialBonds.tryReproduce(level, villager, now);
@@ -65,7 +65,7 @@ public final class SocialEventHandlers {
     private static Villager nearestNeighbour(ServerLevel level, Villager self) {
         AABB box = self.getBoundingBox().inflate(MEET_RADIUS);
         return level.getEntitiesOfClass(Villager.class, box,
-                        v -> v != self && v.hasData(ModAttachments.PERSONA)).stream()
+                        v -> v != self && Census.isCensused(v)).stream()
                 .min(Comparator.comparingDouble(v -> v.distanceToSqr(self)))
                 .orElse(null);
     }
