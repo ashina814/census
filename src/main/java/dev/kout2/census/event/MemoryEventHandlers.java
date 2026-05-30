@@ -4,6 +4,7 @@ import dev.kout2.census.Census;
 import dev.kout2.census.CensusMod;
 import dev.kout2.census.memory.EventType;
 import dev.kout2.census.registry.ModAttachments;
+import dev.kout2.census.social.SocialBonds;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -56,9 +57,12 @@ public final class MemoryEventHandlers {
     }
 
     /**
-     * Nearby censused mobs remember a death. A child of the deceased grieves
-     * far harder — RELATIVE_KILLED, blamed on the killer (the seed of a future
-     * revenge) — while everyone else merely WITNESSED_DEATH.
+     * Nearby censused mobs remember a death. Those who loved the deceased — kin,
+     * or anyone closely bonded — grieve hard (RELATIVE_KILLED, blamed on the
+     * killer: the seed of revenge), while bystanders merely WITNESSED_DEATH.
+     *
+     * Generalising "kin" to "bond" is what frees the revenge story from rare
+     * breeding: kill a villager and its <i>friends</i> may come for you.
      */
     @SubscribeEvent
     public static void onDeath(LivingDeathEvent event) {
@@ -68,6 +72,7 @@ public final class MemoryEventHandlers {
         }
         UUID deadPersonaId = dead.hasData(ModAttachments.PERSONA)
                 ? dead.getData(ModAttachments.PERSONA).id() : null;
+        UUID deadEntityId = dead.getUUID();
         Entity killer = event.getSource().getEntity();
         UUID killerId = killer != null ? killer.getUUID() : null;
 
@@ -75,10 +80,12 @@ public final class MemoryEventHandlers {
         List<LivingEntity> witnesses = dead.level().getEntitiesOfClass(LivingEntity.class, box,
                 e -> e != dead && e.hasData(ModAttachments.PERSONA));
         for (LivingEntity witness : witnesses) {
-            if (deadPersonaId != null && isChildOf(witness, deadPersonaId)) {
+            boolean loved = (deadPersonaId != null && isChildOf(witness, deadPersonaId))
+                    || SocialBonds.bondToward(witness, deadEntityId) >= SocialBonds.GRIEF_BOND;
+            if (loved) {
                 Census.observe(witness, EventType.RELATIVE_KILLED, killerId);
             } else {
-                Census.observe(witness, EventType.WITNESSED_DEATH, dead.getUUID());
+                Census.observe(witness, EventType.WITNESSED_DEATH, deadEntityId);
             }
         }
     }

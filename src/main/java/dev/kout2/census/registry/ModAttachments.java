@@ -7,6 +7,7 @@ import dev.kout2.census.memory.MemoryStream;
 import dev.kout2.census.narrative.NarrativeState;
 import dev.kout2.census.persona.Persona;
 import dev.kout2.census.reputation.ReputationBook;
+import dev.kout2.census.social.Household;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -76,6 +77,13 @@ public final class ModAttachments {
             ATTACHMENT_TYPES.register("narrative", () ->
                     AttachmentType.<NarrativeState>builder(NarrativeState::new)
                             .serialize(NarrativeState.MAP_CODEC)
+                            .build());
+
+    /** Household: partner + last-child time. Persisted, not synced. */
+    public static final Supplier<AttachmentType<Household>> HOUSEHOLD =
+            ATTACHMENT_TYPES.register("household", () ->
+                    AttachmentType.<Household>builder(Household::new)
+                            .serialize(Household.MAP_CODEC)
                             .build());
 
     private ModAttachments() {}
