@@ -58,11 +58,12 @@ public final class ModAttachments {
                             .sync(EmotionalState.STREAM_CODEC)
                             .build());
 
-    /** Lineage: persisted, not synced. Defaults to a founder (no parents). */
+    /** Lineage: persisted and synced (the HUD shows generation). */
     public static final Supplier<AttachmentType<Lineage>> LINEAGE =
             ATTACHMENT_TYPES.register("lineage", () ->
                     AttachmentType.<Lineage>builder(() -> Lineage.FOUNDER)
                             .serialize(Lineage.MAP_CODEC)
+                            .sync(Lineage.STREAM_CODEC)
                             .build());
 
     /** ReputationBook: opinions of others. Persisted, not synced (server logic). */

@@ -3,7 +3,10 @@ package dev.kout2.census.lineage;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import io.netty.buffer.ByteBuf;
 import net.minecraft.core.UUIDUtil;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -28,6 +31,14 @@ public record Lineage(Optional<UUID> parentA, Optional<UUID> parentB, int genera
             UUIDUtil.CODEC.optionalFieldOf("parentB").forGetter(Lineage::parentB),
             Codec.INT.optionalFieldOf("generation", 0).forGetter(Lineage::generation)
     ).apply(inst, Lineage::new));
+
+    /** Synced so the client HUD can show a mob's generation. */
+    public static final StreamCodec<ByteBuf, Lineage> STREAM_CODEC = StreamCodec.composite(
+            ByteBufCodecs.optional(UUIDUtil.STREAM_CODEC), Lineage::parentA,
+            ByteBufCodecs.optional(UUIDUtil.STREAM_CODEC), Lineage::parentB,
+            ByteBufCodecs.VAR_INT, Lineage::generation,
+            Lineage::new
+    );
 
     public static Lineage child(UUID parentAId, UUID parentBId, int parentGeneration) {
         return new Lineage(Optional.of(parentAId), Optional.of(parentBId), parentGeneration + 1);
