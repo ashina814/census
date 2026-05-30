@@ -34,7 +34,9 @@ public final class NameGenerator {
     }
 
     private void train(String word) {
-        String padded = START + START + word + END;
+        // NB: lead with "" so this is string concatenation — `START + START`
+        // alone would be char arithmetic (94 + 94 = 188), corrupting the keys.
+        String padded = "" + START + START + word + END;
         for (int i = 2; i < padded.length(); i++) {
             String key = padded.substring(i - 2, i);
             chain.computeIfAbsent(key, k -> new ArrayList<>()).add(padded.charAt(i));
