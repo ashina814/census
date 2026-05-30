@@ -2,6 +2,9 @@ package dev.kout2.census.event;
 
 import dev.kout2.census.Census;
 import dev.kout2.census.CensusMod;
+import dev.kout2.census.census.CensusRegistry;
+import dev.kout2.census.memory.EventType;
+import dev.kout2.census.registry.ModAttachments;
 import dev.kout2.census.reputation.Gossip;
 import dev.kout2.census.social.SocialBonds;
 import net.minecraft.resources.ResourceKey;
@@ -19,6 +22,7 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * The social heartbeat — gossip, bond growth, courtship and couple-driven
@@ -57,6 +61,9 @@ public final class SocialEventHandlers {
         long now = server.getTickCount();
         int meetingBudget = MAX_MEETINGS_PER_TICK;
 
+        CensusRegistry registry = CensusRegistry.get(server);
+        boolean anyGrief = registry.hasPendingGrief();
+
         for (ServerLevel level : server.getAllLevels()) {
             Roster roster = ROSTERS.computeIfAbsent(level.dimension(), k -> new Roster());
             if (now - roster.refreshedAt >= ROSTER_REFRESH) {
@@ -73,6 +80,9 @@ public final class SocialEventHandlers {
                 roster.cursor++;
                 if (!villager.isAlive() || !Census.isCensused(villager)) {
                     continue; // died/unloaded since the roster was taken
+                }
+                if (anyGrief) {
+                    deliverGrief(registry, villager);
                 }
                 SocialBonds.tryReproduce(level, villager, now);
                 if (meetingBudget > 0 && villager.getRandom().nextFloat() < MEET_CHANCE) {
@@ -91,6 +101,14 @@ public final class SocialEventHandlers {
     @SubscribeEvent
     public static void onServerStopping(ServerStoppingEvent event) {
         ROSTERS.clear();
+    }
+
+    /** Delivers any world-registry grief queued for this villager (distant kin revenge). */
+    private static void deliverGrief(CensusRegistry registry, Villager villager) {
+        UUID personaId = villager.getData(ModAttachments.PERSONA).id();
+        for (CensusRegistry.PendingGrief grief : registry.drainGrief(personaId)) {
+            Census.observe(villager, EventType.RELATIVE_KILLED, grief.killer().orElse(null));
+        }
     }
 
     private static Villager nearestNeighbour(ServerLevel level, Villager self) {

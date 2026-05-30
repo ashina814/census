@@ -4,8 +4,10 @@ import dev.kout2.census.Census;
 import dev.kout2.census.CensusMod;
 import dev.kout2.census.ai.AvengeGoal;
 import dev.kout2.census.ai.FleeThreatGoal;
+import dev.kout2.census.census.CensusRegistry;
 import dev.kout2.census.config.CensusConfig;
 import dev.kout2.census.lineage.Lineage;
+import net.minecraft.server.MinecraftServer;
 import dev.kout2.census.persona.Persona;
 import dev.kout2.census.persona.generator.PersonaGenerator;
 import dev.kout2.census.registry.ModAttachments;
@@ -76,6 +78,12 @@ public final class PersonaEventHandlers {
         villager.setData(ModAttachments.PERSONA, persona);
         villager.setData(ModAttachments.LINEAGE, lineage);
         applyNameTag(villager, persona);
+
+        // Record the new life in the world registry (for cross-world family/revenge).
+        MinecraftServer server = villager.level().getServer();
+        if (server != null) {
+            CensusRegistry.get(server).register(persona, lineage);
+        }
     }
 
     /** Installs Census behaviours onto the villager's goal selector (idempotent per join). */

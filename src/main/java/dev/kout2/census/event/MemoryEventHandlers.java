@@ -3,6 +3,7 @@ package dev.kout2.census.event;
 import dev.kout2.census.Census;
 import dev.kout2.census.CensusMod;
 import dev.kout2.census.block.GravestoneBlockEntity;
+import dev.kout2.census.census.CensusRegistry;
 import dev.kout2.census.config.CensusConfig;
 import dev.kout2.census.memory.EventType;
 import dev.kout2.census.persona.Persona;
@@ -11,6 +12,7 @@ import dev.kout2.census.registry.ModBlocks;
 import dev.kout2.census.social.SocialBonds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
@@ -22,6 +24,7 @@ import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -82,21 +85,37 @@ public final class MemoryEventHandlers {
         Entity killer = event.getSource().getEntity();
         UUID killerId = killer != null ? killer.getUUID() : null;
 
+        // Nearby witnesses grieve by bond; blood kin are handled below via the
+        // registry so they react at any distance (and aren't double-counted here).
         AABB box = dead.getBoundingBox().inflate(WITNESS_RADIUS);
         List<LivingEntity> witnesses = dead.level().getEntitiesOfClass(LivingEntity.class, box,
                 e -> e != dead && Census.isCensused(e));
         for (LivingEntity witness : witnesses) {
-            boolean loved = (deadPersonaId != null && isChildOf(witness, deadPersonaId))
-                    || SocialBonds.bondToward(witness, deadEntityId) >= SocialBonds.GRIEF_BOND;
-            if (loved) {
+            if (deadPersonaId != null && isChildOf(witness, deadPersonaId)) {
+                continue; // kin → registry path
+            }
+            if (SocialBonds.bondToward(witness, deadEntityId) >= SocialBonds.GRIEF_BOND) {
                 Census.observe(witness, EventType.RELATIVE_KILLED, killerId);
             } else {
                 Census.observe(witness, EventType.WITNESSED_DEATH, deadEntityId);
             }
         }
 
-        if (Census.isCensused(dead) && CensusConfig.GRAVESTONES_ENABLED.get()) {
-            placeGravestone(dead, killer);
+        // World-registry path: every child of the deceased — loaded, far, or in
+        // an unloaded chunk — is queued to grieve and (if vengeful) avenge.
+        if (deadPersonaId != null) {
+            MinecraftServer server = dead.level().getServer();
+            if (server != null) {
+                CensusRegistry registry = CensusRegistry.get(server);
+                long day = dead.level().getGameTime() / 24000L;
+                registry.recordDeath(deadPersonaId, day);
+                for (UUID childId : registry.childrenOf(deadPersonaId)) {
+                    registry.enqueueGrief(childId, Optional.ofNullable(killerId), dead.level().getGameTime());
+                }
+            }
+            if (CensusConfig.GRAVESTONES_ENABLED.get()) {
+                placeGravestone(dead, killer);
+            }
         }
     }
 
