@@ -90,12 +90,12 @@ neoForge {
             // "SCAN": For mods scan.
             // "REGISTRIES": For firing of registry events.
             // "REGISTRYDUMP": For getting the contents of all registries.
-            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            systemProperty 'forge.logging.markers', ''
 
-            // Recommended logging level for the console
-            // You can set various levels here.
-            // Please read: https://stackoverflow.com/questions/2031163/when-to-use-the-different-log-levels
-            logLevel = org.slf4j.event.Level.DEBUG
+            // INFO (not DEBUG) in dev: DEBUG spam is a major FPS drain in the
+            // dev client and is rarely needed. Bump back to DEBUG when chasing a
+            // specific bug.
+            logLevel = org.slf4j.event.Level.INFO
         }
     }
 
