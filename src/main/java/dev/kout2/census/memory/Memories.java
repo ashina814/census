@@ -17,8 +17,8 @@ public final class Memories {
     private Memories() {}
 
     /**
-     * Records an event on {@code holder} if it has a persona. The importance is
-     * scored from the holder's personality; valence comes from the event type.
+     * Records an event on {@code holder} if it has a persona. Convenience wrapper
+     * that looks up the persona itself.
      *
      * @param subject the other party's UUID (player or mob), or {@code null}
      */
@@ -26,7 +26,16 @@ public final class Memories {
         if (!holder.hasData(ModAttachments.PERSONA)) {
             return;
         }
-        Persona persona = holder.getData(ModAttachments.PERSONA);
+        record(holder, holder.getData(ModAttachments.PERSONA), type, subject);
+    }
+
+    /**
+     * Records an event using an already-resolved persona (avoids a second
+     * attachment lookup when the caller has it). Importance is scored from the
+     * personality; valence comes from the event type.
+     */
+    public static void record(LivingEntity holder, Persona persona, EventType type,
+                              @Nullable UUID subject) {
         long now = holder.level().getGameTime();
         float importance = ImportanceScorer.score(type, persona.personality());
         MemoryEntry entry = new MemoryEntry(

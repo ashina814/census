@@ -2,6 +2,9 @@ package dev.kout2.census.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import dev.kout2.census.CensusMod;
+import dev.kout2.census.emotion.Emotion;
+import dev.kout2.census.emotion.EmotionalState;
+import dev.kout2.census.emotion.PADMood;
 import dev.kout2.census.memory.MemoryEntry;
 import dev.kout2.census.memory.MemoryStream;
 import dev.kout2.census.persona.BigFive;
@@ -56,6 +59,11 @@ public final class CensusCommand {
                         .executes(ctx -> memory(ctx.getSource(), nearest(ctx.getSource())))
                         .then(Commands.argument("target", EntityArgument.entity())
                                 .executes(ctx -> memory(ctx.getSource(),
+                                        EntityArgument.getEntity(ctx, "target")))))
+                .then(Commands.literal("emotion")
+                        .executes(ctx -> emotion(ctx.getSource(), nearest(ctx.getSource())))
+                        .then(Commands.argument("target", EntityArgument.entity())
+                                .executes(ctx -> emotion(ctx.getSource(),
                                         EntityArgument.getEntity(ctx, "target"))))));
     }
 
@@ -88,6 +96,18 @@ public final class CensusCommand {
         MemoryStream stream = entity.getData(ModAttachments.MEMORY);
         long now = source.getLevel().getGameTime();
         source.sendSuccess(() -> describeMemory(p, stream, now), false);
+        return 1;
+    }
+
+    private static int emotion(CommandSourceStack source, Entity entity) {
+        if (!validate(source, entity)) {
+            return 0;
+        }
+        Persona p = entity.getData(ModAttachments.PERSONA);
+        EmotionalState state = entity.getData(ModAttachments.EMOTION);
+        long now = source.getLevel().getGameTime();
+        state.decayTo(now); // show current values, not last-touched
+        source.sendSuccess(() -> describeEmotion(p, state), false);
         return 1;
     }
 
@@ -171,5 +191,23 @@ public final class CensusCommand {
         if (valence > 0.1f) return ChatFormatting.GREEN;
         if (valence < -0.1f) return ChatFormatting.RED;
         return ChatFormatting.GRAY;
+    }
+
+    private static Component describeEmotion(Persona p, EmotionalState state) {
+        Emotion dominant = state.dominant();
+        PADMood mood = state.mood();
+        MutableComponent body = Component.literal("")
+                .append(line(ChatFormatting.GOLD, "── " + p.fullName() + " — emotion ──"))
+                .append(line(ChatFormatting.YELLOW, "  feeling: "
+                        + (dominant == null ? "calm" : dominant.lowerName())));
+        for (Emotion e : Emotion.values()) {
+            float v = state.intensity(e);
+            ChatFormatting color = v > 0.05f ? ChatFormatting.AQUA : ChatFormatting.DARK_GRAY;
+            body.append(line(color, String.format("  %-10s %s", e.lowerName(), bar(v))));
+        }
+        body.append(line(ChatFormatting.LIGHT_PURPLE, String.format(
+                "  mood: %s  (P%+.2f A%+.2f D%+.2f)",
+                mood.label(), mood.pleasure(), mood.arousal(), mood.dominance())));
+        return body;
     }
 }

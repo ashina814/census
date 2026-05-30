@@ -1,8 +1,8 @@
 package dev.kout2.census.event;
 
+import dev.kout2.census.Census;
 import dev.kout2.census.CensusMod;
 import dev.kout2.census.memory.EventType;
-import dev.kout2.census.memory.Memories;
 import dev.kout2.census.registry.ModAttachments;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.entity.Entity;
@@ -17,11 +17,12 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import java.util.List;
 
 /**
- * Turns gameplay events into memories on censused mobs.
+ * Turns gameplay events into observations on censused mobs. Each call to
+ * {@link Census#observe} fans out to both memory (Phase 2) and emotional
+ * appraisal (Phase 3).
  *
- * Phase 2 handles three things: being hurt (HARMED), being fed (FED), and
- * witnessing a nearby death (WITNESSED_DEATH). The disposition/emotional
- * consequences of these memories arrive in Phase 3.
+ * Handles being hurt (HARMED), being fed (FED), and witnessing a nearby death
+ * (WITNESSED_DEATH).
  */
 @EventBusSubscriber(modid = CensusMod.MODID)
 public final class MemoryEventHandlers {
@@ -37,7 +38,7 @@ public final class MemoryEventHandlers {
             return;
         }
         Entity attacker = event.getSource().getEntity();
-        Memories.record(victim, EventType.HARMED, attacker != null ? attacker.getUUID() : null);
+        Census.observe(victim, EventType.HARMED, attacker != null ? attacker.getUUID() : null);
     }
 
     /** A mob remembers being offered food (the interaction fires before vanilla handling). */
@@ -49,7 +50,7 @@ public final class MemoryEventHandlers {
         if (event.getTarget() instanceof LivingEntity target
                 && target.hasData(ModAttachments.PERSONA)
                 && event.getItemStack().has(DataComponents.FOOD)) {
-            Memories.record(target, EventType.FED, event.getEntity().getUUID());
+            Census.observe(target, EventType.FED, event.getEntity().getUUID());
         }
     }
 
@@ -64,7 +65,7 @@ public final class MemoryEventHandlers {
         List<LivingEntity> witnesses = dead.level().getEntitiesOfClass(LivingEntity.class, box,
                 e -> e != dead && e.hasData(ModAttachments.PERSONA));
         for (LivingEntity witness : witnesses) {
-            Memories.record(witness, EventType.WITNESSED_DEATH, dead.getUUID());
+            Census.observe(witness, EventType.WITNESSED_DEATH, dead.getUUID());
         }
     }
 }

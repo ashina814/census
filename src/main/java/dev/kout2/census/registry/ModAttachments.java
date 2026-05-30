@@ -1,6 +1,7 @@
 package dev.kout2.census.registry;
 
 import dev.kout2.census.CensusMod;
+import dev.kout2.census.emotion.EmotionalState;
 import dev.kout2.census.memory.MemoryStream;
 import dev.kout2.census.persona.Persona;
 import net.neoforged.bus.api.IEventBus;
@@ -40,6 +41,17 @@ public final class ModAttachments {
             ATTACHMENT_TYPES.register("memory", () ->
                     AttachmentType.<MemoryStream>builder(MemoryStream::new)
                             .serialize(MemoryStream.MAP_CODEC)
+                            .build());
+
+    /**
+     * EmotionalState: persisted AND synced (acute emotions + PAD mood). Synced
+     * so the client can render facial/particle feedback in Phase 8.
+     */
+    public static final Supplier<AttachmentType<EmotionalState>> EMOTION =
+            ATTACHMENT_TYPES.register("emotion", () ->
+                    AttachmentType.<EmotionalState>builder(EmotionalState::new)
+                            .serialize(EmotionalState.MAP_CODEC)
+                            .sync(EmotionalState.STREAM_CODEC)
                             .build());
 
     private ModAttachments() {}
