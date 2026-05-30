@@ -1,5 +1,59 @@
 {
   "itemGroup.census": "戸籍",
   "item.census.census_book": "戸籍書",
-  "item.census.census_book.tip": "右クリックで対象の人物像を読む"
+  "item.census.census_book.tip": "右クリックで対象の人物像を読む",
+
+  "census.gen": "（第%s世代）",
+  "census.calm": "平静",
+  "census.line.feeling": "気分: %s ・ 機嫌: %s",
+  "census.line.opinion": "あなたへの感情: %s (%s)",
+  "census.line.last": "直近: %s (%s)",
+
+  "census.ago.seconds": "%s秒前",
+  "census.ago.minutes": "%s分前",
+  "census.ago.days": "%s日前",
+
+  "census.emotion.joy": "喜び",
+  "census.emotion.distress": "苦悩",
+  "census.emotion.hope": "希望",
+  "census.emotion.fear": "おびえ",
+  "census.emotion.pride": "誇り",
+  "census.emotion.shame": "恥",
+  "census.emotion.anger": "怒り",
+  "census.emotion.gratitude": "感謝",
+
+  "census.mood.exuberant": "上機嫌",
+  "census.mood.dependent": "甘え",
+  "census.mood.relaxed": "くつろぎ",
+  "census.mood.docile": "穏やか",
+  "census.mood.hostile": "敵意",
+  "census.mood.anxious": "不安",
+  "census.mood.disdainful": "見下し",
+  "census.mood.bored": "退屈",
+
+  "census.opinion.adores": "慕っている",
+  "census.opinion.likes": "好いている",
+  "census.opinion.neutral": "どちらでもない",
+  "census.opinion.dislikes": "嫌っている",
+  "census.opinion.hates": "憎んでいる",
+
+  "census.event.fed": "餌をもらった",
+  "census.event.gifted": "贈り物をもらった",
+  "census.event.healed": "癒された",
+  "census.event.harmed": "傷つけられた",
+  "census.event.witnessed_death": "死を目撃した",
+  "census.event.relative_killed": "肉親を殺された",
+
+  "census.trait.brave": "勇敢",
+  "census.trait.cowardly": "臆病",
+  "census.trait.vengeful": "執念深い",
+  "census.trait.forgiving": "寛容",
+  "census.trait.curious": "好奇心旺盛",
+  "census.trait.incurious": "無関心",
+  "census.trait.diligent": "勤勉",
+  "census.trait.lazy": "怠惰",
+  "census.trait.sociable": "社交的",
+  "census.trait.reclusive": "内向的",
+  "census.trait.kind": "親切",
+  "census.trait.callous": "冷淡"
 }

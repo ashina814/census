@@ -15,14 +15,13 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.LivingEntity;
 
 import java.util.List;
-import java.util.StringJoiner;
+import java.util.Set;
 import java.util.UUID;
 
 /**
  * Builds a compact, at-a-glance "card" summarising a mob's inner state for one
- * viewer — name, current feeling, what it thinks of you, and its latest strong
- * memory. Used by the census book (right-click) so players can read a mob
- * without typing a single command. Phase 8 will reuse this for an on-screen HUD.
+ * viewer. Fully localised via translation keys (en/ja), so it reads in the
+ * client's language. Used by the census book; reused by a Phase 8 HUD.
  */
 public final class CensusReport {
     private CensusReport() {}
@@ -35,43 +34,68 @@ public final class CensusReport {
         ReputationBook reputation = entity.getData(ModAttachments.REPUTATION);
         MemoryStream memory = entity.getData(ModAttachments.MEMORY);
 
-        MutableComponent card = Component.literal("")
-                .append(line(ChatFormatting.GOLD, p.fullName()
-                        + (lineage.hasParents() ? " (gen " + lineage.generation() + ")" : "")));
+        MutableComponent card = Component.literal("");
 
+        // Name (+ generation)
+        MutableComponent nameLine = Component.literal(p.fullName());
+        if (lineage.hasParents()) {
+            nameLine.append(" ").append(Component.translatable("census.gen", lineage.generation()));
+        }
+        appendLine(card, nameLine, ChatFormatting.GOLD);
+
+        // Feeling + mood
         Emotion dominant = emotion.dominant();
-        card.append(line(ChatFormatting.YELLOW, "feeling: "
-                + (dominant == null ? "calm" : dominant.lowerName())
-                + " · mood: " + emotion.mood().label()));
+        Component feeling = dominant == null
+                ? Component.translatable("census.calm")
+                : Component.translatable("census.emotion." + dominant.lowerName());
+        Component mood = Component.translatable("census.mood." + emotion.mood().label());
+        appendLine(card, Component.translatable("census.line.feeling", feeling, mood),
+                ChatFormatting.YELLOW);
 
+        // Opinion of the viewer
         float opinion = reputation.opinionOf(viewer);
-        card.append(line(opinionColor(opinion), "thinks of you: " + opinionWord(opinion)
-                + String.format(" (%+.0f)", opinion)));
+        appendLine(card, Component.translatable("census.line.opinion",
+                        Component.translatable("census.opinion." + opinionKey(opinion)),
+                        String.format("%+.0f", opinion)),
+                opinionColor(opinion));
 
+        // Most recent memory
         List<MemoryEntry> recent = memory.recent(1);
         if (!recent.isEmpty()) {
             MemoryEntry last = recent.get(0);
-            card.append(line(ChatFormatting.GRAY, "last: " + last.type().getSerializedName()
-                    + " (" + ago(now - last.tick()) + ")"));
+            appendLine(card, Component.translatable("census.line.last",
+                            Component.translatable("census.event." + last.type().getSerializedName()),
+                            ago(now - last.tick())),
+                    ChatFormatting.GRAY);
         }
 
-        String traits = traits(p);
+        // Traits
+        Set<DerivedTrait> traits = p.traits();
         if (!traits.isEmpty()) {
-            card.append(line(ChatFormatting.DARK_GRAY, traits));
+            MutableComponent traitsLine = Component.literal("");
+            boolean first = true;
+            for (DerivedTrait trait : traits) {
+                if (!first) {
+                    traitsLine.append("、");
+                }
+                traitsLine.append(Component.translatable("census.trait." + trait.name().toLowerCase()));
+                first = false;
+            }
+            appendLine(card, traitsLine, ChatFormatting.DARK_GRAY);
         }
         return card;
     }
 
-    private static MutableComponent line(ChatFormatting color, String text) {
-        return Component.literal(text + "\n").withStyle(color);
+    private static void appendLine(MutableComponent card, Component content, ChatFormatting color) {
+        card.append(content.copy().withStyle(color)).append("\n");
     }
 
-    private static String opinionWord(float o) {
-        if (o > 25f) return "adores you";
-        if (o > 5f) return "likes you";
-        if (o < -25f) return "hates you";
-        if (o < -5f) return "dislikes you";
-        return "neutral on you";
+    private static String opinionKey(float o) {
+        if (o > 25f) return "adores";
+        if (o > 5f) return "likes";
+        if (o < -25f) return "hates";
+        if (o < -5f) return "dislikes";
+        return "neutral";
     }
 
     private static ChatFormatting opinionColor(float o) {
@@ -80,18 +104,10 @@ public final class CensusReport {
         return ChatFormatting.GRAY;
     }
 
-    private static String ago(long ticks) {
+    private static Component ago(long ticks) {
         long t = Math.max(0L, ticks);
-        if (t < 1200) return (t / 20) + "s ago";
-        if (t < 24000) return (t / 1200) + "m ago";
-        return (t / 24000) + "d ago";
-    }
-
-    private static String traits(Persona p) {
-        StringJoiner joiner = new StringJoiner(", ");
-        for (DerivedTrait trait : p.traits()) {
-            joiner.add(trait.name().toLowerCase());
-        }
-        return joiner.toString();
+        if (t < 1200) return Component.translatable("census.ago.seconds", t / 20);
+        if (t < 24000) return Component.translatable("census.ago.minutes", t / 1200);
+        return Component.translatable("census.ago.days", t / 24000);
     }
 }

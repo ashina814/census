@@ -1,5 +1,59 @@
 {
   "itemGroup.census": "Census",
   "item.census.census_book": "Census Book",
-  "item.census.census_book.tip": "Right-click a mob to read its persona"
+  "item.census.census_book.tip": "Right-click a mob to read its persona",
+
+  "census.gen": "(gen %s)",
+  "census.calm": "calm",
+  "census.line.feeling": "feeling: %s · mood: %s",
+  "census.line.opinion": "thinks of you: %s (%s)",
+  "census.line.last": "last: %s (%s)",
+
+  "census.ago.seconds": "%ss ago",
+  "census.ago.minutes": "%sm ago",
+  "census.ago.days": "%sd ago",
+
+  "census.emotion.joy": "joyful",
+  "census.emotion.distress": "distressed",
+  "census.emotion.hope": "hopeful",
+  "census.emotion.fear": "afraid",
+  "census.emotion.pride": "proud",
+  "census.emotion.shame": "ashamed",
+  "census.emotion.anger": "angry",
+  "census.emotion.gratitude": "grateful",
+
+  "census.mood.exuberant": "exuberant",
+  "census.mood.dependent": "dependent",
+  "census.mood.relaxed": "relaxed",
+  "census.mood.docile": "docile",
+  "census.mood.hostile": "hostile",
+  "census.mood.anxious": "anxious",
+  "census.mood.disdainful": "disdainful",
+  "census.mood.bored": "bored",
+
+  "census.opinion.adores": "adores you",
+  "census.opinion.likes": "likes you",
+  "census.opinion.neutral": "neutral on you",
+  "census.opinion.dislikes": "dislikes you",
+  "census.opinion.hates": "hates you",
+
+  "census.event.fed": "fed",
+  "census.event.gifted": "gifted",
+  "census.event.healed": "healed",
+  "census.event.harmed": "harmed",
+  "census.event.witnessed_death": "witnessed a death",
+  "census.event.relative_killed": "a relative was killed",
+
+  "census.trait.brave": "brave",
+  "census.trait.cowardly": "cowardly",
+  "census.trait.vengeful": "vengeful",
+  "census.trait.forgiving": "forgiving",
+  "census.trait.curious": "curious",
+  "census.trait.incurious": "incurious",
+  "census.trait.diligent": "diligent",
+  "census.trait.lazy": "lazy",
+  "census.trait.sociable": "sociable",
+  "census.trait.reclusive": "reclusive",
+  "census.trait.kind": "kind",
+  "census.trait.callous": "callous"
 }
