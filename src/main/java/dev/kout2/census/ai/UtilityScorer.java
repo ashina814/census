@@ -19,15 +19,20 @@ import net.minecraft.world.entity.player.Player;
  * personality and reputation — exactly what a weighted score expresses.
  */
 public final class UtilityScorer {
-    /** Above this, a mob will break off and flee the player. */
-    public static final float FLEE_THRESHOLD = 0.30f;
+    /** Above this, a mob will keep its distance from the player. */
+    public static final float FLEE_THRESHOLD = 0.35f;
 
     private UtilityScorer() {}
 
     /**
-     * How much {@code mob} wants to flee {@code player} right now, in [0, ~1.5].
-     * Driven by standing dislike, acute fear/anger, and timidity (neurotic and
-     * introverted mobs spook more easily; brave ones stand their ground).
+     * How much {@code mob} wants to keep away from {@code player}, in [0, ~1.2].
+     *
+     * Deliberately <b>grudge-driven</b>: standing dislike (reputation) dominates,
+     * with acute fear only a secondary push. Vanilla already makes villagers
+     * panic the instant they're hit; Census's distinctive behaviour is the mob
+     * that avoids someone it has <i>come to hate</i> even when not under attack.
+     * Timidity (neurotic, introverted) lowers the bar; brave mobs hold their
+     * ground until the grudge runs deep.
      */
     public static float fleeDesire(LivingEntity mob, Player player) {
         if (!mob.hasData(ModAttachments.PERSONA)) {
@@ -41,12 +46,11 @@ public final class UtilityScorer {
         float opinion = reputation.opinionOf(player.getUUID());   // -100..100
         float dislike = Math.max(0f, -opinion) / 100f;            // 0..1
         float fear = emotion.intensity(Emotion.FEAR);
-        float anger = emotion.intensity(Emotion.ANGER);
 
         BigFive b = persona.personality();
-        float timidity = Math.max(0.2f,
-                0.5f + b.neuroticism() * 0.6f - b.extraversion() * 0.2f);
+        float timidity = Math.clamp(
+                0.5f + b.neuroticism() * 0.6f - b.extraversion() * 0.2f, 0.2f, 1.1f);
 
-        return (dislike * 0.7f + fear * 0.7f + anger * 0.2f) * timidity;
+        return (dislike * 1.0f + fear * 0.35f) * timidity;
     }
 }

@@ -24,17 +24,26 @@ public final class FleeThreatGoal extends Goal {
     private static final int FLEE_Y_RANGE = 7;
     private static final double FLEE_SPEED = 0.85;
 
+    /** Only re-scan every this many ticks — keeps per-mob cost low. */
+    private static final int SCAN_INTERVAL = 10;
+
     private final PathfinderMob mob;
     private Player threat;
     private Vec3 fleeTarget;
+    private int scanCooldown;
 
     public FleeThreatGoal(PathfinderMob mob) {
         this.mob = mob;
+        this.scanCooldown = mob.getRandom().nextInt(SCAN_INTERVAL); // stagger across mobs
         setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
     }
 
     @Override
     public boolean canUse() {
+        if (scanCooldown-- > 0) {
+            return false;
+        }
+        scanCooldown = SCAN_INTERVAL;
         if (!mob.hasData(ModAttachments.PERSONA)) {
             return false;
         }
