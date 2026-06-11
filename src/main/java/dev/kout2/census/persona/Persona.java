@@ -68,7 +68,8 @@ public record Persona(
     );
 
     public String fullName() {
-        return givenName + " " + familyName;
+        // Animals carry only a given name (empty family name).
+        return familyName.isEmpty() ? givenName : givenName + " " + familyName;
     }
 
     public Set<DerivedTrait> traits() {

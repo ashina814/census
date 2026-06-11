@@ -28,6 +28,19 @@ public final class PersonaGenerator {
         );
     }
 
+    /** An animal: a given name only, no family line. */
+    public static Persona generateAnimal(RandomSource random, long currentTick) {
+        Gender gender = random.nextBoolean() ? Gender.MALE : Gender.FEMALE;
+        return new Persona(
+                UUID.randomUUID(),
+                NameGenerator.givenName(random, gender),
+                "",
+                currentTick,
+                gender,
+                BigFive.random(random)
+        );
+    }
+
     /** A child of two known personas: inherits the father's surname (Phase 4 stub). */
     public static Persona generateChild(Persona parentA, Persona parentB,
                                         RandomSource random, long currentTick) {
