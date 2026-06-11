@@ -1,0 +1,12 @@
+{
+  "required_trait": "vengeful",
+  "triggers": [
+    { "memory_event": "relative_killed", "max_opinion": -20.0 },
+    { "max_opinion": -60.0 }
+  ],
+  "effects": {
+    "set_avenge_target": true,
+    "announce": "census.trope.avenger",
+    "angry_particles": true
+  }
+}

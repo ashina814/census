@@ -1,0 +1,10 @@
+{
+  "required_trait": "kind",
+  "triggers": [
+    { "memory_event": "harmed", "max_opinion": -35.0 }
+  ],
+  "effects": {
+    "announce": "census.trope.betrayed",
+    "add_emotion": "distress"
+  }
+}
