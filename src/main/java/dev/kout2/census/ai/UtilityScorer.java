@@ -1,6 +1,7 @@
 package dev.kout2.census.ai;
 
 import dev.kout2.census.Census;
+import dev.kout2.census.ai.utility.ActionDefinition;
 import dev.kout2.census.emotion.Emotion;
 import dev.kout2.census.emotion.EmotionalState;
 import dev.kout2.census.persona.BigFive;
@@ -11,31 +12,22 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 
 /**
- * Utility AI scoring — turns a mob's inner state into a number per candidate
- * action. Phase 6 ships one action (fleeing a threatening player); the same
- * pattern extends to approach/avoid/seek behaviours later.
- *
- * Utility AI is chosen over GOAP here: there is no multi-step planning to do,
- * just a continuous "how much do I want to do X right now" that blends emotion,
- * personality and reputation — exactly what a weighted score expresses.
+ * Desire formulas for the utility AI — how much a mob wants each behaviour
+ * right now, blending reputation, acute emotion and personality. The shape of
+ * each formula is code; its coefficients and threshold come from the datapack
+ * {@link ActionDefinition} so packs can retune behaviour without a rebuild.
  */
 public final class UtilityScorer {
-    /** Above this, a mob will keep its distance from the player. */
-    public static final float FLEE_THRESHOLD = 0.35f;
-
     private UtilityScorer() {}
 
     /**
-     * How much {@code mob} wants to keep away from {@code player}, in [0, ~1.2].
+     * Desire to keep away from {@code player}, in [0, ~1.2]. Grudge-driven:
+     * standing dislike dominates, acute fear is secondary (vanilla already
+     * handles panic-on-hit). Timidity (neurotic, introverted) lowers the bar.
      *
-     * Deliberately <b>grudge-driven</b>: standing dislike (reputation) dominates,
-     * with acute fear only a secondary push. Vanilla already makes villagers
-     * panic the instant they're hit; Census's distinctive behaviour is the mob
-     * that avoids someone it has <i>come to hate</i> even when not under attack.
-     * Timidity (neurotic, introverted) lowers the bar; brave mobs hold their
-     * ground until the grudge runs deep.
+     * Params: {@code dislike_weight} (default 1.0), {@code fear_weight} (0.35).
      */
-    public static float fleeDesire(LivingEntity mob, Player player) {
+    public static float fleeDesire(LivingEntity mob, Player player, ActionDefinition action) {
         if (!Census.isCensused(mob)) {
             return 0f;
         }
@@ -52,6 +44,28 @@ public final class UtilityScorer {
         float timidity = Math.clamp(
                 0.5f + b.neuroticism() * 0.6f - b.extraversion() * 0.2f, 0.2f, 1.1f);
 
-        return (dislike * 1.0f + fear * 0.35f) * timidity;
+        return (dislike * action.param("dislike_weight", 1.0f)
+                + fear * action.param("fear_weight", 0.35f)) * timidity;
+    }
+
+    /**
+     * Desire to bring {@code player} a present, in [0, ~1.2]. Zero until the
+     * mob's opinion reaches {@code min_opinion}; above that it scales with the
+     * opinion, amplified for extraverted and agreeable personalities — the
+     * sociable and kind give gladly, the reclusive rarely.
+     *
+     * Params: {@code min_opinion} (default 50).
+     */
+    public static float giftDesire(LivingEntity mob, Player player, ActionDefinition action) {
+        if (!Census.isCensused(mob)) {
+            return 0f;
+        }
+        float opinion = mob.getData(ModAttachments.REPUTATION).opinionOf(player.getUUID());
+        if (opinion < action.param("min_opinion", 50f)) {
+            return 0f;
+        }
+        BigFive b = mob.getData(ModAttachments.PERSONA).personality();
+        float warmth = 0.5f + b.extraversion() * 0.35f + b.agreeableness() * 0.35f;
+        return (opinion / 100f) * warmth;
     }
 }

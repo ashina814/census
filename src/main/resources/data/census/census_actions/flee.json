@@ -1,0 +1,5 @@
+{
+  "behavior": "flee",
+  "threshold": 0.35,
+  "params": { "dislike_weight": 1.0, "fear_weight": 0.35 }
+}

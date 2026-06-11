@@ -1,0 +1,7 @@
+{
+  "behavior": "gift",
+  "threshold": 0.5,
+  "params": { "min_opinion": 50.0 },
+  "item": "minecraft:emerald",
+  "cooldown": 12000
+}
