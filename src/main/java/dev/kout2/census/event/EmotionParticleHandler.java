@@ -2,6 +2,7 @@ package dev.kout2.census.event;
 
 import dev.kout2.census.Census;
 import dev.kout2.census.CensusMod;
+import dev.kout2.census.config.CensusConfig;
 import dev.kout2.census.emotion.Emotion;
 import dev.kout2.census.emotion.EmotionalState;
 import dev.kout2.census.registry.ModAttachments;
@@ -32,7 +33,7 @@ public final class EmotionParticleHandler {
     @SubscribeEvent
     public static void onServerTick(ServerTickEvent.Post event) {
         long now = event.getServer().getTickCount();
-        if (now % INTERVAL != 0) {
+        if (now % INTERVAL != 0 || !CensusConfig.EMOTION_PARTICLES.get()) {
             return;
         }
         for (ServerLevel level : event.getServer().getAllLevels()) {

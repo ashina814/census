@@ -1,6 +1,7 @@
 package dev.kout2.census.social;
 
 import dev.kout2.census.Census;
+import dev.kout2.census.config.CensusConfig;
 import dev.kout2.census.lineage.Lineage;
 import dev.kout2.census.persona.Persona;
 import dev.kout2.census.persona.generator.PersonaGenerator;
@@ -33,7 +34,6 @@ public final class SocialBonds {
 
     private static final double REPRODUCE_RADIUS = 6.0;
     private static final double CROWD_RADIUS = 32.0;
-    private static final int LOCAL_POP_CAP = 16;
     private static final long CHILD_COOLDOWN = 24000L;   // ~1 in-game day
     private static final float REPRODUCE_CHANCE = 0.10f;
 
@@ -105,7 +105,7 @@ public final class SocialBonds {
 
     private static boolean isCrowded(ServerLevel level, Villager parent) {
         return level.getEntitiesOfClass(Villager.class, parent.getBoundingBox().inflate(CROWD_RADIUS))
-                .size() >= LOCAL_POP_CAP;
+                .size() >= CensusConfig.LOCAL_POPULATION_CAP.get();
     }
 
     private static void bearChild(ServerLevel level, Villager a, Villager b, long now) {

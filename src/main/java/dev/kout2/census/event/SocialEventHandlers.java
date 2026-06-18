@@ -3,6 +3,7 @@ package dev.kout2.census.event;
 import dev.kout2.census.Census;
 import dev.kout2.census.CensusMod;
 import dev.kout2.census.census.CensusRegistry;
+import dev.kout2.census.config.CensusConfig;
 import dev.kout2.census.memory.EventType;
 import dev.kout2.census.reflection.Reflector;
 import dev.kout2.census.registry.ModAttachments;
@@ -64,6 +65,12 @@ public final class SocialEventHandlers {
 
         CensusRegistry registry = CensusRegistry.get(server);
         boolean anyGrief = registry.hasPendingGrief();
+        boolean social = CensusConfig.SOCIAL_ENABLED.get();
+        boolean reproduce = social && CensusConfig.REPRODUCTION_ENABLED.get();
+        boolean reflect = CensusConfig.REFLECTION_ENABLED.get();
+        if (!anyGrief && !social && !reflect) {
+            return; // nothing to do this tick
+        }
 
         for (ServerLevel level : server.getAllLevels()) {
             Roster roster = ROSTERS.computeIfAbsent(level.dimension(), k -> new Roster());
@@ -85,11 +92,13 @@ public final class SocialEventHandlers {
                 if (anyGrief) {
                     deliverGrief(registry, villager);
                 }
-                if (Reflector.isDue(villager, now)) {
+                if (reflect && Reflector.isDue(villager, now)) {
                     Reflector.reflect(villager, now);
                 }
-                SocialBonds.tryReproduce(level, villager, now);
-                if (meetingBudget > 0 && villager.getRandom().nextFloat() < MEET_CHANCE) {
+                if (reproduce) {
+                    SocialBonds.tryReproduce(level, villager, now);
+                }
+                if (social && meetingBudget > 0 && villager.getRandom().nextFloat() < MEET_CHANCE) {
                     Villager neighbour = nearestNeighbour(level, villager);
                     if (neighbour != null) {
                         Gossip.exchange(villager, neighbour, now);
