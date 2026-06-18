@@ -18,6 +18,15 @@
   "census.line.last": "直近: %s (%s)",
   "census.line.mind": "心境: %s",
 
+  "census.gui.personality": "性格",
+  "census.gui.memories": "最近の記憶",
+  "census.gui.no_memories": "（まだ特筆すべき記憶はない）",
+  "census.gui.big5.o": "開放性",
+  "census.gui.big5.c": "誠実性",
+  "census.gui.big5.e": "外向性",
+  "census.gui.big5.a": "協調性",
+  "census.gui.big5.n": "神経症傾向",
+
   "census.reflection.resents": "誰かを恨んでいる",
   "census.reflection.trusts": "誰かを信頼している",
   "census.reflection.grieving": "喪に服している",

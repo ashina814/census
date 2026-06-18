@@ -18,6 +18,15 @@
   "census.line.last": "last: %s (%s)",
   "census.line.mind": "mind: %s",
 
+  "census.gui.personality": "Personality",
+  "census.gui.memories": "Recent memories",
+  "census.gui.no_memories": "(nothing memorable yet)",
+  "census.gui.big5.o": "Openness",
+  "census.gui.big5.c": "Conscientious.",
+  "census.gui.big5.e": "Extraversion",
+  "census.gui.big5.a": "Agreeableness",
+  "census.gui.big5.n": "Neuroticism",
+
   "census.reflection.resents": "holds a grudge",
   "census.reflection.trusts": "trusts someone dear",
   "census.reflection.grieving": "in mourning",

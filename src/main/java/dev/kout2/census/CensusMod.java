@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import dev.kout2.census.config.CensusConfig;
 import dev.kout2.census.registry.ModAttachments;
 import dev.kout2.census.registry.ModBlockEntities;
+import dev.kout2.census.network.CensusNetwork;
 import dev.kout2.census.registry.ModBlocks;
 import dev.kout2.census.registry.ModItems;
 import net.minecraft.core.registries.Registries;
@@ -64,6 +65,8 @@ public class CensusMod {
         ModItems.register(modEventBus);
         ModAttachments.register(modEventBus);
         CREATIVE_MODE_TABS.register(modEventBus);
+
+        modEventBus.addListener(CensusNetwork::onRegisterPayloads);
 
         modContainer.registerConfig(ModConfig.Type.SERVER, CensusConfig.SPEC);
         NeoForge.EVENT_BUS.register(this);
